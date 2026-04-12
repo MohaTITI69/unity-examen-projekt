@@ -1,0 +1,65 @@
+{
+    "Turtle": {
+        "checkpoints": [
+            {
+                "steps": 2499900,
+                "file_path": "results\\final4\\Turtle\\Turtle-2499900.onnx",
+                "reward": 13.122704642159599,
+                "creation_time": 1775850685.871613,
+                "auxillary_file_paths": [
+                    "results\\final4\\Turtle\\Turtle-2499900.pt"
+                ]
+            },
+            {
+                "steps": 2999964,
+                "file_path": "results\\final4\\Turtle\\Turtle-2999964.onnx",
+                "reward": 13.046407169765896,
+                "creation_time": 1775851227.7939959,
+                "auxillary_file_paths": [
+                    "results\\final4\\Turtle\\Turtle-2999964.pt"
+                ]
+            },
+            {
+                "steps": 3499960,
+                "file_path": "results\\final4\\Turtle\\Turtle-3499960.onnx",
+                "reward": 13.057415822520852,
+                "creation_time": 1775851826.8863244,
+                "auxillary_file_paths": [
+                    "results\\final4\\Turtle\\Turtle-3499960.pt"
+                ]
+            },
+            {
+                "steps": 3999956,
+                "file_path": "results\\final4\\Turtle\\Turtle-3999956.onnx",
+                "reward": 13.024999588727951,
+                "creation_time": 1775852363.8296232,
+                "auxillary_file_paths": [
+                    "results\\final4\\Turtle\\Turtle-3999956.pt"
+                ]
+            },
+            {
+                "steps": 4000061,
+                "file_path": "results\\final4\\Turtle\\Turtle-4000061.onnx",
+                "reward": 13.055504493175015,
+                "creation_time": 1775852363.8868911,
+                "auxillary_file_paths": [
+                    "results\\final4\\Turtle\\Turtle-4000061.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 4000061,
+            "file_path": "results\\final4\\Turtle.onnx",
+            "reward": 13.055504493175015,
+            "creation_time": 1775852363.8868911,
+            "auxillary_file_paths": [
+                "results\\final4\\Turtle\\Turtle-4000061.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cpu"
+    }
+}
