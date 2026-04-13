@@ -67,6 +67,6 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "TurtleAgent.slnx",
+    "dotnet.defaultSolution": "unity-examen-projekt.slnx",
     "dotnet.enableWorkspaceBasedDevelopment": false
 }
