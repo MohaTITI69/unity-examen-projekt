@@ -119,6 +119,32 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &58340501 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8825813780434677407, guid: fbdd00ab609fbe94eb93c6528dc54291, type: 3}
+  m_PrefabInstance: {fileID: 1510458191}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &58340502 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 94578584670390917, guid: fbdd00ab609fbe94eb93c6528dc54291, type: 3}
+  m_PrefabInstance: {fileID: 1510458191}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &58340507
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 58340501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d752615c0677094b8930e97e05d8279, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Spawner
+  grid: {fileID: 1269325596}
+  agent: {fileID: 2121176871}
+  goal: {fileID: 58340502}
+  minDistance: 5
 --- !u!1 &177106332
 GameObject:
   m_ObjectHideFlags: 0
@@ -129,6 +155,7 @@ GameObject:
   m_Component:
   - component: {fileID: 177106333}
   - component: {fileID: 177106334}
+  - component: {fileID: 177106335}
   m_Layer: 0
   m_Name: Astar
   m_TagString: Untagged
@@ -164,11 +191,32 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AstarGrid
   unwalkableMask:
+    m_Bits: 128
+  gridWorldSize: {x: 55, y: 55}
+  nodeRadius: 1
+  tileMaterial: {fileID: 0}
+  nodeDiameter: 0
+  gridSizeX: 0
+  gridSizeY: 0
+--- !u!114 &177106335
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177106332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 894ed7d17df947a47894c91f239b8c32, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MyGrid
+  unwalkableMask:
     serializedVersion: 2
     m_Bits: 128
   gridWorldSize: {x: 55, y: 55}
   nodeRadius: 1
   tileMaterial: {fileID: 0}
+  showGrid: 0
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -688,11 +736,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1435001539647497121, guid: c3c09b76069f354488c6c97383311f01, type: 3}
       propertyPath: m_Name
-      value: Environment 2
+      value: A*
       objectReference: {fileID: 0}
     - target: {fileID: 1435001539647497121, guid: c3c09b76069f354488c6c97383311f01, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5943986492020836484, guid: c3c09b76069f354488c6c97383311f01, type: 3}
       propertyPath: m_LocalPosition.x
@@ -756,6 +804,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5943986492020836484, guid: c3c09b76069f354488c6c97383311f01, type: 3}
   m_PrefabInstance: {fileID: 1134451755}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1269325596 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2260168538666441228, guid: fbdd00ab609fbe94eb93c6528dc54291, type: 3}
+  m_PrefabInstance: {fileID: 1510458191}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85ae852cebcd5af48a6ace80cc9a8d1c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MyGrid
 --- !u!1 &1424850635
 GameObject:
   m_ObjectHideFlags: 0
@@ -800,7 +859,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f96d2ba1268d724e92efa4dc832f2c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Spawner
-  grid: {fileID: 177106334}
+  grid: {fileID: 177106335}
   agent: {fileID: 1027980532}
   goal: {fileID: 801167129}
   minDistance: 5
@@ -852,23 +911,72 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2260168538666441228, guid: fbdd00ab609fbe94eb93c6528dc54291, type: 3}
+      propertyPath: unwalkableMask.m_Bits
+      value: 128
+      objectReference: {fileID: 0}
     - target: {fileID: 4705161406611109027, guid: fbdd00ab609fbe94eb93c6528dc54291, type: 3}
       propertyPath: _moveSpeed
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 4890095413877695644, guid: fbdd00ab609fbe94eb93c6528dc54291, type: 3}
       propertyPath: m_Name
-      value: Environment 1
+      value: RL
       objectReference: {fileID: 0}
     - target: {fileID: 4890095413877695644, guid: fbdd00ab609fbe94eb93c6528dc54291, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4162077563026249663, guid: fbdd00ab609fbe94eb93c6528dc54291, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4884667175633188413, guid: fbdd00ab609fbe94eb93c6528dc54291, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2121176880}
+    - targetCorrespondingSourceObject: {fileID: 8825813780434677407, guid: fbdd00ab609fbe94eb93c6528dc54291, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 58340507}
   m_SourcePrefab: {fileID: 100100000, guid: fbdd00ab609fbe94eb93c6528dc54291, type: 3}
+--- !u!23 &2045023401 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3611125884819076773, guid: fbdd00ab609fbe94eb93c6528dc54291, type: 3}
+  m_PrefabInstance: {fileID: 1510458191}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &2121176870 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4884667175633188413, guid: fbdd00ab609fbe94eb93c6528dc54291, type: 3}
+  m_PrefabInstance: {fileID: 1510458191}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2121176871 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1357373777554952809, guid: fbdd00ab609fbe94eb93c6528dc54291, type: 3}
+  m_PrefabInstance: {fileID: 1510458191}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2121176880
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2121176870}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 494626aa24d6e064aaa6d006fd2bc4a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurtleAgent
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 0
+  _goal: {fileID: 58340502}
+  _groundRenderer: {fileID: 2045023401}
+  _moveSpeed: 5
+  _rotationSpeed: 180
+  _spawner: {fileID: 58340507}
+  CurrentEpisode: 0
+  CumulativeReward: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
