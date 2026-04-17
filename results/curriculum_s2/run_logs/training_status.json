@@ -1,0 +1,47 @@
+{
+    "Turtle": {
+        "checkpoints": [
+            {
+                "steps": 499938,
+                "file_path": "results\\curriculum_s2\\Turtle\\Turtle-499938.onnx",
+                "reward": 14.426168066263198,
+                "creation_time": 1776337311.6181877,
+                "auxillary_file_paths": [
+                    "results\\curriculum_s2\\Turtle\\Turtle-499938.pt"
+                ]
+            },
+            {
+                "steps": 999989,
+                "file_path": "results\\curriculum_s2\\Turtle\\Turtle-999989.onnx",
+                "reward": 14.676443662833083,
+                "creation_time": 1776337939.9691958,
+                "auxillary_file_paths": [
+                    "results\\curriculum_s2\\Turtle\\Turtle-999989.pt"
+                ]
+            },
+            {
+                "steps": 1000040,
+                "file_path": "results\\curriculum_s2\\Turtle\\Turtle-1000040.onnx",
+                "reward": 14.720211960872014,
+                "creation_time": 1776337940.0530975,
+                "auxillary_file_paths": [
+                    "results\\curriculum_s2\\Turtle\\Turtle-1000040.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 1000040,
+            "file_path": "results\\curriculum_s2\\Turtle.onnx",
+            "reward": 14.720211960872014,
+            "creation_time": 1776337940.0530975,
+            "auxillary_file_paths": [
+                "results\\curriculum_s2\\Turtle\\Turtle-1000040.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cpu"
+    }
+}

@@ -12,8 +12,8 @@ behaviors:
       learning_rate_schedule: linear
     network_settings:
       normalize: true
-      hidden_units: 128
-      num_layers: 2
+      hidden_units: 256
+      num_layers: 3
     reward_signals:
       extrinsic:
         gamma: 0.99
@@ -24,6 +24,6 @@ behaviors:
         encoding_size: 128
         learning_rate: 0.0003
     keep_checkpoints: 5
-    max_steps: 4000000 
+    max_steps: 3000000 
     time_horizon: 128
     summary_freq: 10000
