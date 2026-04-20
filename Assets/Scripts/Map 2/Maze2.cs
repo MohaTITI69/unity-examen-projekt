@@ -21,7 +21,7 @@ public class Maze2 : MonoBehaviour
 
     Vector3 startPosition = Vector3.zero;
 
-    public int[,] maze; //0 = path, 1 = vägg, 2 = spelarens nuvarande position
+    public int[,] maze; //0 = path, 1 = vägg, 2 = spelarens nuvarande position, 3 = goal
     private System.Random random = new System.Random();
 
     void Start()
@@ -59,6 +59,22 @@ public class Maze2 : MonoBehaviour
         // Start carving from (1,1)
         startCell = new Vector2Int(1, 1);
         CarvePassagesFrom(startCell.x, startCell.y);
+    }
+
+
+    void generateRandomGoal()
+    {
+        while (true)
+        {
+            int x = random.Next(width + 1);
+            int y = random.Next(height + 1);
+            if (maze[x, y] == 0)
+            {
+                maze[x, y] = 3;
+                //Skapa en grön kub så man kan se var målen är.
+                break;
+            }
+        }
     }
 
 
