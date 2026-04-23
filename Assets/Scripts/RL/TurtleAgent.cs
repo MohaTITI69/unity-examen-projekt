@@ -31,14 +31,20 @@ public class TurtleAgent : Agent
     private bool _usedPortalThisEpisode = false;
     private int _optimalPortalIndex = -1;
  
-    // ──  debug tracking ────────────────────────────────────────
+    // ── debug tracking ────────────────────────────────────────
     private Vector3 _episodeStartPos;
     private Vector3 _episodeGoalPos;
     private float _directDistAtStart;
     private float _optimalPortalCostAtStart;
     private int _stepCount = 0;
  
-    // Running totals for portal usage rate
+    // ── Shaping: track distance to optimal portal entry ───────
+    private float _previousDistToOptimalTarget;
+    // When true, agent has passed through the optimal portal —
+    // switch shaping target back to goal
+    private bool _passedThroughOptimalPortal = false;
+ 
+    // Running totals
     private int _totalEpisodesWithPortalOpportunity = 0;
     private int _totalEpisodesPortalUsed = 0;
     private int _totalEpisodesGoalReached = 0;
@@ -62,6 +68,7 @@ public class TurtleAgent : Agent
         _canDetectGoal = false;
         _usedPortalThisEpisode = false;
         _usedOptimalPortal = false;
+        _passedThroughOptimalPortal = false;
         _stepCount = 0;
  
         if (_groundRenderer != null)
@@ -80,7 +87,7 @@ public class TurtleAgent : Agent
  
         _optimalPortalIndex = GetOptimalPortalIndex();
  
-        // ── Thesis debug: log episode start info ─────────────────────
+        // ── Thesis debug ──────────────────────────────────────
         _episodeStartPos = transform.position;
         _episodeGoalPos = _goal.position;
         _directDistAtStart = Vector3.Distance(_episodeStartPos, _episodeGoalPos);
@@ -89,11 +96,13 @@ public class TurtleAgent : Agent
         if (_optimalPortalIndex >= 0)
             _totalEpisodesWithPortalOpportunity++;
  
+        // Init shaping distance
+        _previousDistToOptimalTarget = GetDistToOptimalTarget();
+ 
         Debug.Log($"[RL Episode {CurrentEpisode}] START — " +
                   $"agent={_episodeStartPos:F1}  goal={_episodeGoalPos:F1}  " +
                   $"directDist={_directDistAtStart:F1}  " +
                   $"portalOptimal={(_optimalPortalIndex >= 0 ? "YES cost=" + _optimalPortalCostAtStart.ToString("F1") : "NO")}");
-        // ────────────────────────────────────────────────────────────
     }
  
     private void ResetPositions()
@@ -128,7 +137,6 @@ public class TurtleAgent : Agent
         return bestIndex;
     }
  
-    // ── Returns the best portal cost (or direct dist if no portal optimal) ──
     private float GetOptimalPortalCost()
     {
         if (_optimalPortalIndex < 0)
@@ -141,28 +149,58 @@ public class TurtleAgent : Agent
                        + Vector3.Distance(pair.aPosTarget.position, _goal.position);
         return Mathf.Min(costViaA, costViaB);
     }
-    // ────────────────────────────────────────────────────────────────
+ 
+    // ── Returns distance to current optimal target:
+    //    - If portal is optimal and not yet used: distance to portal entry
+    //    - Otherwise: distance to goal
+    private float GetDistToOptimalTarget()
+    {
+        if (_optimalPortalIndex >= 0 && !_passedThroughOptimalPortal)
+        {
+            PortalPair pair = _portalPairs[_optimalPortalIndex];
+            float costViaA = Vector3.Distance(transform.position, pair.portalA.position)
+                           + Vector3.Distance(pair.bPosTarget.position, _goal.position);
+            float costViaB = Vector3.Distance(transform.position, pair.portalB.position)
+                           + Vector3.Distance(pair.aPosTarget.position, _goal.position);
+ 
+            // Point toward whichever portal entry is part of the optimal route
+            if (costViaA <= costViaB)
+                return Vector3.Distance(transform.position, pair.portalA.position);
+            else
+                return Vector3.Distance(transform.position, pair.portalB.position);
+        }
+        // No portal opportunity, or already used portal — shape toward goal
+        return Vector3.Distance(transform.localPosition, _goal.localPosition);
+    }
  
     public void OnPortalUsed(int portalIndex)
     {
         if (_usedPortalThisEpisode) return;
         _usedPortalThisEpisode = true;
  
-        // ──  debug: log portal use ─────────────────────────────
         Debug.Log($"[RL Episode {CurrentEpisode}] PORTAL USED — " +
                   $"portalIndex={portalIndex}  " +
                   $"optimalIndex={_optimalPortalIndex}  " +
                   $"wasOptimal={portalIndex == _optimalPortalIndex}  " +
                   $"stepsSoFar={_stepCount}");
         _totalEpisodesPortalUsed++;
-        // ────────────────────────────────────────────────────────────
  
         if (portalIndex == _optimalPortalIndex)
+        {
             _usedOptimalPortal = true;
+            _passedThroughOptimalPortal = true;
+            AddReward(3f); // immediate reward for correct portal
+        }
         else if (_optimalPortalIndex == -1)
-            AddReward(-1f);
+        {
+            // No portal was optimal — penalise using one
+            AddReward(-2f);
+        }
         else
-            AddReward(-0.5f);
+        {
+            // Wrong portal used when a better one exists
+            AddReward(-2f);
+        }
     }
  
     private IEnumerator FlashGround(Color targetColor, float duration)
@@ -205,6 +243,11 @@ public class TurtleAgent : Agent
         }
  
         sensor.AddObservation(_optimalPortalIndex >= 0 ? 1f : 0f);
+ 
+        // ── Extra observation: normalised distance to optimal target ──
+        // Gives agent explicit signal about how far it is from
+        // the portal it SHOULD be heading toward
+        sensor.AddObservation(GetDistToOptimalTarget() / 70f);
     }
  
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -223,9 +266,15 @@ public class TurtleAgent : Agent
  
         MoveAgent(actions.DiscreteActions);
  
-        float currentDist = Vector3.Distance(transform.localPosition, _goal.localPosition);
-        AddReward((_previousDist - currentDist) * 0.1f);
-        _previousDist = currentDist;
+        // ── Reward shaping: progress toward optimal target ────────────
+        // When portal is optimal: reward getting closer to portal entry
+        // After portal used (or no portal): reward getting closer to goal
+        float currentDistToTarget = GetDistToOptimalTarget();
+        float shapingReward = (_previousDistToOptimalTarget - currentDistToTarget) * 0.1f;
+        AddReward(shapingReward);
+        _previousDistToOptimalTarget = currentDistToTarget;
+        // ────────────────────────────────────────────────────────────
+ 
         AddReward(-0.001f);
         CumulativeReward = GetCumulativeReward();
     }
@@ -250,10 +299,19 @@ public class TurtleAgent : Agent
     private void GoalReached()
     {
         float bonus = 0f;
+ 
         if (_usedOptimalPortal)
-            bonus = 3f;
+        {
+            bonus = 5f;  // Stronger bonus for optimal portal + goal
+        }
         else if (_optimalPortalIndex >= 0 && !_usedPortalThisEpisode)
-            bonus = -1f;
+        {
+            bonus = -3f; // Stronger penalty for ignoring optimal portal
+        }
+        else if (_usedPortalThisEpisode && !_usedOptimalPortal)
+        {
+            bonus = -2f; // Penalty for using wrong portal and still reaching goal
+        }
  
         AddReward(10f + bonus);
         _reachedGoalLastEpisode = true;
@@ -262,7 +320,6 @@ public class TurtleAgent : Agent
         _totalEpisodesGoalReached++;
         if (_usedOptimalPortal) _totalEpisodesGoalReachedViaPortal++;
  
-        // ──  debug: episode summary ────────────────────────────
         float portalUsageRate = _totalEpisodesWithPortalOpportunity > 0
             ? (float)_totalEpisodesPortalUsed / _totalEpisodesWithPortalOpportunity * 100f
             : 0f;
@@ -277,7 +334,6 @@ public class TurtleAgent : Agent
                   $"portalWasOptimal={(_optimalPortalIndex >= 0 ? "YES" : "NO")}  " +
                   $"usedOptimalPortal={_usedOptimalPortal}");
  
-        // Every 10 episodes print running stats
         if (CurrentEpisode % 10 == 0)
         {
             Debug.Log("╔══════════════════════════════════════════════════════╗");
@@ -293,7 +349,6 @@ public class TurtleAgent : Agent
             Debug.Log("║  is learning to exploit the shortcut                 ║");
             Debug.Log("╚══════════════════════════════════════════════════════╝");
         }
-        // ────────────────────────────────────────────────────────────
  
         EndEpisode();
     }

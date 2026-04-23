@@ -11,70 +11,39 @@ public class Pathfinding : MonoBehaviour {
     AstarGrid grid;
     LineRenderer lineRenderer;
     PortalManagerAstar portalManager;
+    Spawner spawner;
  
-    // ── Bug fix: track which portal the seeker just exited ──────────
-    private int lastUsedPortalIndex = -1;
-    private Vector3 lastExitPosition = Vector3.zero;
-    private const float reentryBlockDistance = 3f;
-    // ────────────────────────────────────────────────────────────────
+    // ── Stats matching TurtleAgent ────────────────────────────
+    private int _currentRun = 0;
+    private int _totalRuns = 0;
+    private int _totalGoalReached = 0;
+    private int _totalRunsWithPortalOpportunity = 0;
+    private int _totalPortalUsed = 0;
+    private int _totalGoalReachedViaOptimalPortal = 0;
+ 
+    private bool _usedPortal = false;
+    private bool _usedOptimalPortal = false;
+    private int _optimalPortalIndex = -1;
+    private float _directDistAtStart;
+    private float _optimalPortalCostAtStart;
+    // ─────────────────────────────────────────────────────────
  
     void Awake() {
         grid = FindFirstObjectByType<AstarGrid>();
         portalManager = FindFirstObjectByType<PortalManagerAstar>();
- 
-        if (grid == null)
-            Debug.LogError("[Pathfinding] AstarGrid NOT FOUND in scene!");
-        else
-            Debug.Log("[Pathfinding] AstarGrid found OK.");
- 
-        if (portalManager == null)
-            Debug.LogWarning("[Pathfinding] PortalManagerAstar NOT FOUND — portals will be ignored.");
-        else {
-            PortalPairAstar[] pairs = portalManager.GetPortalPairs();
-            Debug.Log($"[Pathfinding] PortalManager found with {pairs.Length} portal pair(s).");
-            for (int i = 0; i < pairs.Length; i++) {
-                PortalPairAstar p = pairs[i];
-                Debug.Log($"[Pathfinding] Portal pair {i}: " +
-                          $"A={p.portalA.position}  exitB={p.exitB.position} | " +
-                          $"B={p.portalB.position}  exitA={p.exitA.position}");
-            }
- 
-            // ── Bug fix: subscribe to teleport event to track exits ──
-            foreach (PortalPairAstar pair in pairs)
-                pair.OnTeleport += OnSeekerTeleported;
-            // ────────────────────────────────────────────────────────
-        }
+        spawner = FindFirstObjectByType<Spawner>();
     }
- 
-    // ── Bug fix: called when seeker physically teleports ────────────
-    // Restarts pathfinding from the new exit position so the seeker
-    // doesn't walk through walls trying to follow the old path.
-    void OnSeekerTeleported(int portalIndex, Transform obj) {
-        if (obj != seeker) return;
- 
-        lastUsedPortalIndex = portalIndex;
-        lastExitPosition = obj.position;
- 
-        Debug.Log($"[Pathfinding] Seeker teleported via portal {portalIndex}. Restarting path from exit {obj.position}");
- 
-        StopAllCoroutines();
-        lineRenderer.positionCount = 0;
-        grid.ResetTileColors();
-        StartCoroutine(FindPathVisual(seeker.position, target.position));
-    }
-    // ────────────────────────────────────────────────────────────────
  
     void Start() {
         GameObject lineObj = new GameObject("PathLine");
         lineRenderer = lineObj.AddComponent<LineRenderer>();
-        lineRenderer.startWidth  = 0.3f;
-        lineRenderer.endWidth    = 0.3f;
-        lineRenderer.material    = new Material(Shader.Find("Sprites/Default"));
-        lineRenderer.startColor  = Color.yellow;
-        lineRenderer.endColor    = Color.yellow;
+        lineRenderer.startWidth     = 0.3f;
+        lineRenderer.endWidth       = 0.3f;
+        lineRenderer.material       = new Material(Shader.Find("Sprites/Default"));
+        lineRenderer.startColor     = Color.yellow;
+        lineRenderer.endColor       = Color.yellow;
         lineRenderer.useWorldSpace  = true;
         lineRenderer.positionCount  = 0;
- 
         StartCoroutine(DelayedStart());
     }
  
@@ -85,7 +54,6 @@ public class Pathfinding : MonoBehaviour {
  
     void Update() {
         if (Input.GetKeyDown(KeyCode.Space)) {
-            Debug.Log("[Pathfinding] Space pressed — rerunning pathfind.");
             StopAllCoroutines();
             lineRenderer.positionCount = 0;
             grid.ResetTileColors();
@@ -94,51 +62,42 @@ public class Pathfinding : MonoBehaviour {
     }
  
     void RunNewPath() {
+        _currentRun++;
+        _usedPortal = false;
+        _usedOptimalPortal = false;
+ 
+        // Spawn first, then log and pathfind with correct positions
+        spawner?.RespawnBoth();
+ 
+        _directDistAtStart        = Vector3.Distance(seeker.position, target.position);
+        _optimalPortalIndex       = GetOptimalPortalIndex();
+        _optimalPortalCostAtStart = GetOptimalPortalCost();
+ 
+        if (_optimalPortalIndex >= 0)
+            _totalRunsWithPortalOpportunity++;
+ 
+        Debug.Log($"[A* Run {_currentRun}] START — " +
+                  $"agent={seeker.position:F1}  goal={target.position:F1}  " +
+                  $"directDist={_directDistAtStart:F1}  " +
+                  $"portalOptimal={(_optimalPortalIndex >= 0 ? "YES cost=" + _optimalPortalCostAtStart.ToString("F1") : "NO")}");
+ 
         grid.ResetTileColors();
         lineRenderer.positionCount = 0;
         StartCoroutine(FindPathVisual(seeker.position, target.position));
     }
  
     IEnumerator FindPathVisual(Vector3 startPos, Vector3 targetPos) {
- 
         AstarNode startNode  = grid.NodeFromWorldPoint(startPos);
         AstarNode targetNode = grid.NodeFromWorldPoint(targetPos);
  
-        Debug.Log($"[Pathfinding] === NEW PATHFIND ===");
-        Debug.Log($"[Pathfinding] Seeker world pos: {startPos}  → grid node ({startNode.gridX},{startNode.gridY})  walkable={startNode.walkable}");
-        Debug.Log($"[Pathfinding] Target world pos: {targetPos} → grid node ({targetNode.gridX},{targetNode.gridY})  walkable={targetNode.walkable}");
- 
-        if (portalManager != null) {
-            foreach (PortalPairAstar pair in portalManager.GetPortalPairs()) {
-                AstarNode entryA = grid.NodeFromWorldPoint(pair.portalA.position);
-                AstarNode exitB  = grid.NodeFromWorldPoint(pair.exitB.position);
-                AstarNode entryB = grid.NodeFromWorldPoint(pair.portalB.position);
-                AstarNode exitA  = grid.NodeFromWorldPoint(pair.exitA.position);
- 
-                Debug.Log($"[Pathfinding] Portal A entrance grid node: ({entryA.gridX},{entryA.gridY})  exitB grid node: ({exitB.gridX},{exitB.gridY})");
-                Debug.Log($"[Pathfinding] Portal B entrance grid node: ({entryB.gridX},{entryB.gridY})  exitA grid node: ({exitA.gridX},{exitA.gridY})");
- 
-                int directCost = GetDistance(startNode, targetNode);
-                int viaA = GetDistance(startNode, entryA) + 1 + GetDistance(exitB, targetNode);
-                int viaB = GetDistance(startNode, entryB) + 1 + GetDistance(exitA, targetNode);
-                Debug.Log($"[Pathfinding] Heuristic from START: direct={directCost}  viaPortalA={viaA}  viaPortalB={viaB}");
- 
-                if (Mathf.Min(viaA, viaB) < directCost)
-                    Debug.Log("[Pathfinding] ✔ Portal route looks CHEAPER than direct — A* should prefer it.");
-                else
-                    Debug.LogWarning("[Pathfinding] ✘ Direct route is cheaper than portal from start — A* will likely ignore the portal.");
-            }
-        }
- 
-        Heap<AstarNode> openSet      = new Heap<AstarNode>(grid.MaxSize);
+        Heap<AstarNode>    openSet   = new Heap<AstarNode>(grid.MaxSize);
         HashSet<AstarNode> closedSet = new HashSet<AstarNode>();
         openSet.Add(startNode);
  
         grid.ColorTile(startNode.gridX,  startNode.gridY,  Color.green);
         grid.ColorTile(targetNode.gridX, targetNode.gridY, Color.magenta);
  
-        int steps      = 0;
-        int iterations = 0;
+        int steps = 0, iterations = 0;
  
         while (openSet.Count > 0) {
             AstarNode currentNode = openSet.RemoveFirst();
@@ -149,31 +108,18 @@ public class Pathfinding : MonoBehaviour {
                 grid.ColorTile(currentNode.gridX, currentNode.gridY, Color.red);
  
             if (currentNode == targetNode) {
-                Debug.Log($"[Pathfinding] ✔ Target reached after {iterations} iterations (nodes expanded).");
                 RetracePath(startNode, targetNode, iterations);
                 yield break;
             }
  
-            List<AstarNode> neighbours = grid.GetNeighbours(currentNode);
- 
-            foreach (AstarNode neighbour in neighbours) {
+            foreach (AstarNode neighbour in grid.GetNeighbours(currentNode)) {
                 if (!neighbour.walkable || closedSet.Contains(neighbour)) continue;
  
                 int newCost = currentNode.gCost + GetDistance(currentNode, neighbour);
- 
-                int gridDist = Mathf.Max(
-                    Mathf.Abs(currentNode.gridX - neighbour.gridX),
-                    Mathf.Abs(currentNode.gridY - neighbour.gridY));
-                if (gridDist > 2)
-                    Debug.Log($"[Pathfinding] *** PORTAL EDGE: ({currentNode.gridX},{currentNode.gridY}) → ({neighbour.gridX},{neighbour.gridY})  gridDist={gridDist}  newGCost={newCost}");
- 
                 if (newCost < neighbour.gCost || !openSet.Contains(neighbour)) {
                     neighbour.gCost  = newCost;
                     neighbour.hCost  = GetHeuristic(neighbour, targetNode);
                     neighbour.parent = currentNode;
- 
-                    if (gridDist > 2)
-                        Debug.Log($"[Pathfinding] Portal exit node ({neighbour.gridX},{neighbour.gridY})  hCost={neighbour.hCost}  fCost={neighbour.fCost}");
  
                     if (!openSet.Contains(neighbour)) {
                         openSet.Add(neighbour);
@@ -186,94 +132,80 @@ public class Pathfinding : MonoBehaviour {
             }
  
             steps++;
-            if (steps >= stepsPerFrame) {
-                steps = 0;
-                yield return null;
-            }
+            if (steps >= stepsPerFrame) { steps = 0; yield return null; }
         }
  
-        Debug.LogError($"[Pathfinding] ✘ No path found after {iterations} iterations!");
+        Debug.LogError($"[A* Run {_currentRun}] No path found after {iterations} iterations!");
     }
  
     void RetracePath(AstarNode startNode, AstarNode endNode, int iterations) {
         List<AstarNode> path = new List<AstarNode>();
-        AstarNode currentNode = endNode;
- 
-        while (currentNode != startNode) {
-            path.Add(currentNode);
-            currentNode = currentNode.parent;
-        }
+        AstarNode current = endNode;
+        while (current != startNode) { path.Add(current); current = current.parent; }
         path.Add(startNode);
         path.Reverse();
  
-        bool portalUsed = false;
-        int portalStep = -1;
+        int portalUsedIndex = -1;
         for (int i = 1; i < path.Count; i++) {
             int dx = Mathf.Abs(path[i].gridX - path[i-1].gridX);
             int dy = Mathf.Abs(path[i].gridY - path[i-1].gridY);
             if (Mathf.Max(dx, dy) > 2) {
-                Debug.Log($"[Pathfinding] *** PATH USES PORTAL at step {i}: ({path[i-1].gridX},{path[i-1].gridY}) → ({path[i].gridX},{path[i].gridY})");
-                portalUsed = true;
-                portalStep = i;
+                _usedPortal = true;
+                portalUsedIndex = GetPortalIndexForJump(path[i-1], path[i]);
+                break;
             }
         }
  
-        // ── THESIS SUMMARY ───────────────────────────────────────────
-        Debug.Log("╔══════════════════════════════════════════════════╗");
-        Debug.Log("║           THESIS COMPARISON SUMMARY              ║");
-        Debug.Log("╠══════════════════════════════════════════════════╣");
-        Debug.Log($"║  Nodes explored (iterations):     {iterations,-18}║");
-        Debug.Log($"║  Path length (nodes):             {path.Count,-18}║");
-        Debug.Log($"║  Total path cost (gCost):         {endNode.gCost,-18}║");
-        Debug.Log($"║  Portal used:                     {(portalUsed ? "YES (step " + portalStep + ")" : "NO"),-18}║");
-        Debug.Log("╠══════════════════════════════════════════════════╣");
-        Debug.Log("║  Compare these values with/without portal:       ║");
-        Debug.Log("║  → fewer iterations = more efficient search      ║");
-        Debug.Log("║  → lower gCost = shorter actual path             ║");
-        Debug.Log("║  → fewer path nodes = more direct route          ║");
-        Debug.Log("╚══════════════════════════════════════════════════╝");
-        // ────────────────────────────────────────────────────────────
+        if (_usedPortal) {
+            _usedOptimalPortal = (portalUsedIndex == _optimalPortalIndex);
+            _totalPortalUsed++;
+            Debug.Log($"[A* Run {_currentRun}] PORTAL USED — " +
+                      $"portalIndex={portalUsedIndex}  optimalIndex={_optimalPortalIndex}  " +
+                      $"wasOptimal={_usedOptimalPortal}");
+        }
  
         foreach (AstarNode node in path)
             grid.ColorTile(node.gridX, node.gridY, Color.yellow);
  
         lineRenderer.positionCount = path.Count;
-        for (int i = 0; i < path.Count; i++) {
-            lineRenderer.SetPosition(i, new Vector3(
-                path[i].worldPosition.x, 0.5f, path[i].worldPosition.z));
-        }
+        for (int i = 0; i < path.Count; i++)
+            lineRenderer.SetPosition(i, new Vector3(path[i].worldPosition.x, 0.5f, path[i].worldPosition.z));
  
-        StartCoroutine(MoveSeeker(path));
+        StartCoroutine(MoveSeeker(path, iterations));
     }
  
-    IEnumerator MoveSeeker(List<AstarNode> path) {
-        Debug.Log($"[Pathfinding] Seeker starting movement — {path.Count} nodes.");
+    IEnumerator MoveSeeker(List<AstarNode> path, int iterations) {
+        // Disable portal colliders so seeker movement never triggers OnTriggerEnter
+        portalManager?.SetPortalsActive(false);
  
         for (int i = 0; i < path.Count; i++) {
             AstarNode node = path[i];
-            Vector3 targetPos = new Vector3(node.worldPosition.x, seeker.position.y, node.worldPosition.z);
+            bool isPortalJump = false;
+            Vector3 portalExitWorld = Vector3.zero;
  
             if (i > 0) {
                 int dx = Mathf.Abs(path[i].gridX - path[i-1].gridX);
                 int dy = Mathf.Abs(path[i].gridY - path[i-1].gridY);
-                if (Mathf.Max(dx, dy) > 2)
-                    Debug.Log($"[Pathfinding] Seeker PORTAL JUMP at step {i}: ({path[i-1].gridX},{path[i-1].gridY}) → ({path[i].gridX},{path[i].gridY})");
+                if (Mathf.Max(dx, dy) > 2) {
+                    isPortalJump    = true;
+                    portalExitWorld = GetPortalExitWorld(path[i-1], path[i]);
+                }
             }
  
-            // ── Bug fix: skip MoveTowards for portal jump steps ──────
-            // Instead of walking through walls to the exit node,
-            // just snap the seeker there — the physical teleport is
-            // handled by PortalPairAstar's OnTriggerEnter separately.
-            int gdx = i > 0 ? Mathf.Abs(path[i].gridX - path[i-1].gridX) : 0;
-            int gdy = i > 0 ? Mathf.Abs(path[i].gridY - path[i-1].gridY) : 0;
-            if (Mathf.Max(gdx, gdy) > 2) {
-                // This is a portal jump — snap directly, don't walk through walls
-                seeker.position = targetPos;
+            if (isPortalJump) {
+                // Walk to portal entry
+                Vector3 entryPos = new Vector3(path[i-1].worldPosition.x, seeker.position.y, path[i-1].worldPosition.z);
+                while (Vector3.Distance(seeker.position, entryPos) > 0.05f) {
+                    seeker.position = Vector3.MoveTowards(seeker.position, entryPos, seekerSpeed * Time.deltaTime);
+                    yield return null;
+                }
+                // Teleport to exact exit
+                seeker.position = new Vector3(portalExitWorld.x, seeker.position.y, portalExitWorld.z);
                 yield return null;
                 continue;
             }
-            // ────────────────────────────────────────────────────────
  
+            Vector3 targetPos = new Vector3(node.worldPosition.x, seeker.position.y, node.worldPosition.z);
             while (Vector3.Distance(seeker.position, targetPos) > 0.05f) {
                 seeker.position = Vector3.MoveTowards(seeker.position, targetPos, seekerSpeed * Time.deltaTime);
                 yield return null;
@@ -281,33 +213,115 @@ public class Pathfinding : MonoBehaviour {
             seeker.position = targetPos;
         }
  
-        Debug.Log("[Pathfinding] ✔ Seeker reached goal!");
+        // Re-enable portal colliders
+        portalManager?.SetPortalsActive(true);
+ 
+        _totalRuns++;
+        _totalGoalReached++;
+        if (_usedOptimalPortal) _totalGoalReachedViaOptimalPortal++;
+ 
+        float portalUsageRate = _totalRunsWithPortalOpportunity > 0
+            ? (float)_totalPortalUsed / _totalRunsWithPortalOpportunity * 100f : 0f;
+        float optimalPortalRate = _totalRunsWithPortalOpportunity > 0
+            ? (float)_totalGoalReachedViaOptimalPortal / _totalRunsWithPortalOpportunity * 100f : 0f;
+ 
+        Debug.Log($"[A* Run {_currentRun}] GOAL REACHED — " +
+                  $"iterations={iterations}  portalUsed={_usedPortal}  " +
+                  $"portalWasOptimal={(_optimalPortalIndex >= 0 ? "YES" : "NO")}  " +
+                  $"usedOptimalPortal={_usedOptimalPortal}");
+ 
+        if (_currentRun % 10 == 0) {
+            Debug.Log("╔══════════════════════════════════════════════════════╗");
+            Debug.Log("║           A* THESIS STATS (running average)          ║");
+            Debug.Log("╠══════════════════════════════════════════════════════╣");
+            Debug.Log($"║  Runs completed:                  {_currentRun,-22}║");
+            Debug.Log($"║  Goals reached:                   {_totalGoalReached,-22}║");
+            Debug.Log($"║  Runs w/ portal opportunity:      {_totalRunsWithPortalOpportunity,-22}║");
+            Debug.Log($"║  Portal used (of opportunities):  {portalUsageRate:F1}%{"",-18}║");
+            Debug.Log($"║  Optimal portal + goal reached:   {optimalPortalRate:F1}%{"",-18}║");
+            Debug.Log("╚══════════════════════════════════════════════════════╝");
+        }
+ 
+        yield return new WaitForSeconds(0.5f);
+        RunNewPath();
     }
  
-    int GetDistance(AstarNode nodeA, AstarNode nodeB) {
-        int dstX = Mathf.Abs(nodeA.gridX - nodeB.gridX);
-        int dstY = Mathf.Abs(nodeA.gridY - nodeB.gridY);
+    // ── Helpers ───────────────────────────────────────────────────────
+ 
+    int GetPortalIndexForJump(AstarNode from, AstarNode to) {
+        if (portalManager == null) return -1;
+        PortalPairAstar[] pairs = portalManager.GetPortalPairs();
+        for (int i = 0; i < pairs.Length; i++) {
+            AstarNode entryA = grid.NodeFromWorldPoint(pairs[i].portalA.position);
+            AstarNode entryB = grid.NodeFromWorldPoint(pairs[i].portalB.position);
+            if ((from.gridX == entryA.gridX && from.gridY == entryA.gridY) ||
+                (from.gridX == entryB.gridX && from.gridY == entryB.gridY))
+                return i;
+        }
+        return -1;
+    }
+ 
+    Vector3 GetPortalExitWorld(AstarNode from, AstarNode to) {
+        if (portalManager == null) return to.worldPosition;
+        PortalPairAstar[] pairs = portalManager.GetPortalPairs();
+        for (int i = 0; i < pairs.Length; i++) {
+            AstarNode entryA = grid.NodeFromWorldPoint(pairs[i].portalA.position);
+            AstarNode entryB = grid.NodeFromWorldPoint(pairs[i].portalB.position);
+            if (from.gridX == entryA.gridX && from.gridY == entryA.gridY) return pairs[i].exitB.position;
+            if (from.gridX == entryB.gridX && from.gridY == entryB.gridY) return pairs[i].exitA.position;
+        }
+        return to.worldPosition;
+    }
+ 
+    int GetOptimalPortalIndex() {
+        if (portalManager == null) return -1;
+        float directDist = Vector3.Distance(seeker.position, target.position);
+        float best = directDist;
+        int bestIndex = -1;
+        PortalPairAstar[] pairs = portalManager.GetPortalPairs();
+        for (int i = 0; i < pairs.Length; i++) {
+            float viaA = Vector3.Distance(seeker.position, pairs[i].portalA.position)
+                       + Vector3.Distance(pairs[i].exitB.position, target.position);
+            float viaB = Vector3.Distance(seeker.position, pairs[i].portalB.position)
+                       + Vector3.Distance(pairs[i].exitA.position, target.position);
+            float bestPair = Mathf.Min(viaA, viaB);
+            if (bestPair < best) { best = bestPair; bestIndex = i; }
+        }
+        return bestIndex;
+    }
+ 
+    float GetOptimalPortalCost() {
+        if (_optimalPortalIndex < 0 || portalManager == null) return _directDistAtStart;
+        PortalPairAstar pair = portalManager.GetPortalPairs()[_optimalPortalIndex];
+        float viaA = Vector3.Distance(seeker.position, pair.portalA.position)
+                   + Vector3.Distance(pair.exitB.position, target.position);
+        float viaB = Vector3.Distance(seeker.position, pair.portalB.position)
+                   + Vector3.Distance(pair.exitA.position, target.position);
+        return Mathf.Min(viaA, viaB);
+    }
+ 
+    int GetDistance(AstarNode a, AstarNode b) {
+        int dstX = Mathf.Abs(a.gridX - b.gridX);
+        int dstY = Mathf.Abs(a.gridY - b.gridY);
         if (dstX > dstY) return 14 * dstY + 10 * (dstX - dstY);
         return 14 * dstX + 10 * (dstY - dstX);
     }
  
-    int GetHeuristic(AstarNode from, AstarNode target) {
-        int best = GetDistance(from, target);
- 
+    int GetHeuristic(AstarNode from, AstarNode targetNode) {
+        int best = GetDistance(from, targetNode);
         if (portalManager != null) {
             foreach (PortalPairAstar pair in portalManager.GetPortalPairs()) {
                 AstarNode entryA = grid.NodeFromWorldPoint(pair.portalA.position);
                 AstarNode exitB  = grid.NodeFromWorldPoint(pair.exitB.position);
-                int viaA = GetDistance(from, entryA) + 1 + GetDistance(exitB, target);
- 
+                int viaA = GetDistance(from, entryA) + GetDistance(exitB, targetNode);
+
                 AstarNode entryB = grid.NodeFromWorldPoint(pair.portalB.position);
                 AstarNode exitA  = grid.NodeFromWorldPoint(pair.exitA.position);
-                int viaB = GetDistance(from, entryB) + 1 + GetDistance(exitA, target);
- 
+                int viaB = GetDistance(from, entryB) + GetDistance(exitA, targetNode);
+
                 best = Mathf.Min(best, viaA, viaB);
             }
         }
- 
         return best;
     }
 }

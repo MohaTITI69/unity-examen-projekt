@@ -1,0 +1,65 @@
+{
+    "Turtle": {
+        "checkpoints": [
+            {
+                "steps": 4499950,
+                "file_path": "results\\curriculum_s6\\Turtle\\Turtle-4499950.onnx",
+                "reward": 12.721266757117377,
+                "creation_time": 1776725316.140996,
+                "auxillary_file_paths": [
+                    "results\\curriculum_s6\\Turtle\\Turtle-4499950.pt"
+                ]
+            },
+            {
+                "steps": 4999963,
+                "file_path": "results\\curriculum_s6\\Turtle\\Turtle-4999963.onnx",
+                "reward": 12.630109760385972,
+                "creation_time": 1776725892.6617277,
+                "auxillary_file_paths": [
+                    "results\\curriculum_s6\\Turtle\\Turtle-4999963.pt"
+                ]
+            },
+            {
+                "steps": 5499984,
+                "file_path": "results\\curriculum_s6\\Turtle\\Turtle-5499984.onnx",
+                "reward": 12.502351619876348,
+                "creation_time": 1776726464.9943228,
+                "auxillary_file_paths": [
+                    "results\\curriculum_s6\\Turtle\\Turtle-5499984.pt"
+                ]
+            },
+            {
+                "steps": 5999988,
+                "file_path": "results\\curriculum_s6\\Turtle\\Turtle-5999988.onnx",
+                "reward": 12.099642930030823,
+                "creation_time": 1776727038.7054162,
+                "auxillary_file_paths": [
+                    "results\\curriculum_s6\\Turtle\\Turtle-5999988.pt"
+                ]
+            },
+            {
+                "steps": 6000060,
+                "file_path": "results\\curriculum_s6\\Turtle\\Turtle-6000060.onnx",
+                "reward": 12.042552017248594,
+                "creation_time": 1776727038.7930317,
+                "auxillary_file_paths": [
+                    "results\\curriculum_s6\\Turtle\\Turtle-6000060.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 6000060,
+            "file_path": "results\\curriculum_s6\\Turtle.onnx",
+            "reward": 12.042552017248594,
+            "creation_time": 1776727038.7930317,
+            "auxillary_file_paths": [
+                "results\\curriculum_s6\\Turtle\\Turtle-6000060.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cpu"
+    }
+}

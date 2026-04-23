@@ -14,22 +14,20 @@ public class AstarGrid : MonoBehaviour {
     float nodeDiameter;
     int gridSizeX, gridSizeY;
  
-    // ── Portal support ──────────────────────────────────────────────
     private PortalManagerAstar portalManager;
-    // ────────────────────────────────────────────────────────────────
  
     public int MaxSize => gridSizeX * gridSizeY;
  
-    void Start() {
+    void Awake() {
         nodeDiameter = nodeRadius * 2;
         gridSizeX = Mathf.RoundToInt(gridWorldSize.x / nodeDiameter);
         gridSizeY = Mathf.RoundToInt(gridWorldSize.y / nodeDiameter);
         CreateGrid();
-        SpawnFloorTiles();
+    }
  
-        // ── Find portal manager after grid is built ──────────────────
+    void Start() {
+        SpawnFloorTiles();
         portalManager = FindFirstObjectByType<PortalManagerAstar>();
-        // ────────────────────────────────────────────────────────────
     }
  
     void CreateGrid() {
@@ -101,7 +99,7 @@ public class AstarGrid : MonoBehaviour {
     public List<AstarNode> GetNeighbours(AstarNode node) {
         List<AstarNode> neighbours = new List<AstarNode>();
  
-        // ── Standard 8-directional neighbours ───────────────────────
+        // Standard 8-directional neighbours
         for (int x = -1; x <= 1; x++) {
             for (int y = -1; y <= 1; y++) {
                 if (x == 0 && y == 0) continue;
@@ -112,25 +110,27 @@ public class AstarGrid : MonoBehaviour {
             }
         }
  
-        // ── Portal edges: if this node is on a portal entrance, ──────
-        // ── add the corresponding exit node as a neighbour.     ──────
+        // Portal edges: compare grid coordinates instead of world distance
+        // This guarantees exact node matching regardless of portal position precision
         if (portalManager != null) {
             foreach (PortalPairAstar pair in portalManager.GetPortalPairs()) {
-                // Node near portal A entrance → exit comes out at exitB
-                if (Vector3.Distance(node.worldPosition, pair.portalA.position) < nodeDiameter * 2) {
-                    AstarNode exitNode = NodeFromWorldPoint(pair.exitB.position);
-                    if (exitNode.walkable)
-                        neighbours.Add(exitNode);
+                AstarNode entryA = NodeFromWorldPoint(pair.portalA.position);
+                AstarNode entryB = NodeFromWorldPoint(pair.portalB.position);
+                AstarNode exitA  = NodeFromWorldPoint(pair.exitA.position);
+                AstarNode exitB  = NodeFromWorldPoint(pair.exitB.position);
+ 
+                // If current node matches portal A entry → add exitB as neighbour
+                if (node.gridX == entryA.gridX && node.gridY == entryA.gridY) {
+                    if (exitB.walkable)
+                        neighbours.Add(exitB);
                 }
-                // Node near portal B entrance → exit comes out at exitA
-                else if (Vector3.Distance(node.worldPosition, pair.portalB.position) < nodeDiameter * 2) {
-                    AstarNode exitNode = NodeFromWorldPoint(pair.exitA.position);
-                    if (exitNode.walkable)
-                        neighbours.Add(exitNode);
+                // If current node matches portal B entry → add exitA as neighbour
+                else if (node.gridX == entryB.gridX && node.gridY == entryB.gridY) {
+                    if (exitA.walkable)
+                        neighbours.Add(exitA);
                 }
             }
         }
-        // ────────────────────────────────────────────────────────────
  
         return neighbours;
     }

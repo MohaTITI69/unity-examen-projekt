@@ -1,31 +1,29 @@
 using UnityEngine;
-
+ 
 public class PortalManagerAstar : MonoBehaviour
 {
     [SerializeField] private PortalPairAstar[] portalPairs;
-
+ 
     private void Awake()
     {
         for (int i = 0; i < portalPairs.Length; i++)
             portalPairs[i].portalIndex = i;
     }
-
-    private void OnTriggerEnter(Collider other)
+ 
+    public PortalPairAstar[] GetPortalPairs() => portalPairs;
+ 
+    // Enable or disable all portal colliders
+    // Call SetPortalsActive(false) before moving seeker
+    // Call SetPortalsActive(true) after seeker reaches goal
+    public void SetPortalsActive(bool active)
     {
-        if (!other.CompareTag("Portal")) return;
-
-        for (int i = 0; i < portalPairs.Length; i++)
+        foreach (PortalPairAstar pair in portalPairs)
         {
-            PortalPairAstar pair = portalPairs[i];
-
-            if (other.transform == pair.portalA || other.transform.IsChildOf(pair.portalA) ||
-                other.transform == pair.portalB || other.transform.IsChildOf(pair.portalB))
-            {
-                pair.TryTeleport(transform);
-                return;
-            }
+            Collider colA = pair.portalA.GetComponent<Collider>();
+            Collider colB = pair.portalB.GetComponent<Collider>();
+            if (colA != null) colA.enabled = active;
+            if (colB != null) colB.enabled = active;
         }
     }
-
-    public PortalPairAstar[] GetPortalPairs() => portalPairs;
 }
+ 
