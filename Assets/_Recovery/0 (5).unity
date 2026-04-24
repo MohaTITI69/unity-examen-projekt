@@ -205,13 +205,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 802144159}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.60876137, y: 0, z: 0, w: 0.7933534}
-  m_LocalPosition: {x: 0, y: 30, z: -10}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 60, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &802144163
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -286,8 +286,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Maze2
   wallPrefab: {fileID: 6424742046336665802, guid: 862a0cfc5936d044a9fe86d4c358845b, type: 3}
-  Player1Prefab: {fileID: 5754246662903645582, guid: 7e9b971c9300c834290ac489869e4eb9, type: 3}
-  Player1: {fileID: 0}
+  Player1: {fileID: 5754246662903645582, guid: 7e9b971c9300c834290ac489869e4eb9, type: 3}
   goal: {fileID: 805980573442500497, guid: 15111df9d9bd3ca4b844d6540fa9ed7c, type: 3}
   cellSize: 1
   floor: {fileID: 1441982533}

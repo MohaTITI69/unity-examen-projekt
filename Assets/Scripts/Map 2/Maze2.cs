@@ -4,12 +4,14 @@ using UnityEngine;
 public class Maze2 : MonoBehaviour
 {
     [Header("Maze Size")]
-    public int width = 0;
-    public int height = 0;
+    int width = 0;
+    int height = 0;
 
     [Header("Prefabs")]
     public GameObject wallPrefab;
+    public GameObject Player1Prefab;
     public GameObject Player1;
+    public GameObject goal;
 
     [Header("Layout")]
     public float cellSize = 1f;
@@ -17,7 +19,7 @@ public class Maze2 : MonoBehaviour
 
     [Header("Start & goal(dont change")]
     public Vector2Int startCell;
-    public Vector2Int endCell;
+    public Vector2Int endCell = new Vector2Int();
 
     Vector3 startPosition = Vector3.zero;
 
@@ -29,8 +31,10 @@ public class Maze2 : MonoBehaviour
         width = (int)transform.localScale.x; 
         height = (int)transform.localScale.z;
 
+
         GenerateMaze();
         BuildMaze();
+        generateRandomGoal();
         setupPlayers();
     }
 
@@ -38,7 +42,8 @@ public class Maze2 : MonoBehaviour
     void setupPlayers()
     {
         maze[startCell.x, startCell.y] = 2;
-        Instantiate(Player1, new Vector3(startCell.x, floor.position.y + 1, startCell.y) + startPosition, floor.rotation);
+        Player1 = Instantiate(Player1Prefab, new Vector3(startCell.x, floor.position.y + 1, startCell.y) + startPosition, floor.rotation);
+        Player1.GetComponent<A_StarPlayerScript>().correspondingMazeScript = this;
     }
 
 
@@ -66,11 +71,15 @@ public class Maze2 : MonoBehaviour
     {
         while (true)
         {
-            int x = random.Next(width + 1);
-            int y = random.Next(height + 1);
+            int x = random.Next(width);
+            int y = random.Next(height);
             if (maze[x, y] == 0)
             {
                 maze[x, y] = 3;
+
+                Debug.Log("skapar goal?");
+                endCell = new Vector2Int(x, y);
+                Instantiate(goal, getPos(x, y), Quaternion.identity);//ta bort?
                 //Skapa en grön kub så man kan se var målen är.
                 break;
             }
@@ -109,12 +118,10 @@ public class Maze2 : MonoBehaviour
                 maze[x + dir.x / 2, y + dir.y / 2] = 0;
                 maze[nx, ny] = 0;
 
-                endCell = new Vector2Int(nx, ny);
 
                 CarvePassagesFrom(nx, ny);
             }
         }
-        //after the loop, its reached the end of the path(the goal)
     }
 
 
@@ -162,5 +169,12 @@ public class Maze2 : MonoBehaviour
                 }
             }
         }
+    }
+
+    //gets position at the given cordinate
+    public Vector3 getPos(int x, int y)
+    {
+        Vector3 startPos = new Vector3(x - transform.localScale.x / 2, transform.position.y + 1, y - transform.localScale.z / 2) + new Vector3(cellSize / 2, 0, cellSize / 2);
+        return startPos;
     }
 }
