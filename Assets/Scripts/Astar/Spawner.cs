@@ -7,6 +7,8 @@ public class Spawner : MonoBehaviour
     [SerializeField] private Transform agent;
     [SerializeField] private Transform goal;
     [SerializeField] private float minDistance = 5f;
+    [SerializeField] private float minDistanceFromPortal = 3f;
+    [SerializeField] private PortalPair[] portalPairs;
 
     public void RespawnBoth()
     {
@@ -22,7 +24,7 @@ public class Spawner : MonoBehaviour
         foreach (AstarNode n in walkable)
         {
             float dist = Vector3.Distance(n.worldPosition, agent.position);
-            if (dist >= minDistance)
+            if (dist >= minDistance && !TooCloseToPortal(n.worldPosition))
             {
                 goal.position = new Vector3(n.worldPosition.x, goal.position.y, n.worldPosition.z);
                 return;
@@ -38,12 +40,24 @@ public class Spawner : MonoBehaviour
         foreach (AstarNode n in walkable)
         {
             float dist = Vector3.Distance(n.worldPosition, goal.position);
-            if (dist >= minDistance)
+            if (dist >= minDistance && !TooCloseToPortal(n.worldPosition))
             {
                 agent.position = new Vector3(n.worldPosition.x, agent.position.y, n.worldPosition.z);
                 return;
             }
         }
+    }
+
+    private bool TooCloseToPortal(Vector3 position)
+    {
+        if (portalPairs == null) return false;
+        foreach (PortalPair pair in portalPairs)
+        {
+            if (Vector3.Distance(position, pair.portalA.position) < minDistanceFromPortal ||
+                Vector3.Distance(position, pair.portalB.position) < minDistanceFromPortal)
+                return true;
+        }
+        return false;
     }
 
     void Shuffle(List<AstarNode> list)

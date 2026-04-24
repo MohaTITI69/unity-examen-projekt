@@ -405,11 +405,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 177106332}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0508bc8a04d0fb843870ea1c410272c1, type: 3}
+  m_Script: {fileID: 11500000, guid: 7523669da6008cb419ea63f04b66cc88, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AstarPortalManager
-  <portals>k__BackingField: []
-  grid: {fileID: 0}
+  _portalPairs:
+  - {fileID: 730788812}
+  - {fileID: 395981087}
+  - {fileID: 1671182020}
+  _grid: {fileID: 177106334}
 --- !u!1 &281658790
 GameObject:
   m_ObjectHideFlags: 0
@@ -782,6 +785,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 395981086}
+  - component: {fileID: 395981087}
   m_Layer: 0
   m_Name: Portal Pair 2
   m_TagString: Untagged
@@ -806,6 +810,23 @@ Transform:
   - {fileID: 127316845}
   m_Father: {fileID: 1134451756}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &395981087
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 395981085}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38b96fd18162f9e41ae760b53deb4ae0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PortalPair
+  portalA: {fileID: 889442501}
+  portalB: {fileID: 127316845}
+  aPosTarget: {fileID: 934009558}
+  bPosTarget: {fileID: 1973085238}
+  portalIndex: 0
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -1230,6 +1251,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 730788811}
+  - component: {fileID: 730788812}
   m_Layer: 0
   m_Name: 'Portal Pair 1 '
   m_TagString: Untagged
@@ -1254,6 +1276,23 @@ Transform:
   - {fileID: 1278342739}
   m_Father: {fileID: 1134451756}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &730788812
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 730788810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38b96fd18162f9e41ae760b53deb4ae0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PortalPair
+  portalA: {fileID: 558587336}
+  portalB: {fileID: 1278342739}
+  aPosTarget: {fileID: 1730120417}
+  bPosTarget: {fileID: 623246674}
+  portalIndex: 0
 --- !u!1 &739257988
 GameObject:
   m_ObjectHideFlags: 0
@@ -2574,6 +2613,11 @@ MonoBehaviour:
   agent: {fileID: 1027980532}
   goal: {fileID: 801167129}
   minDistance: 5
+  minDistanceFromPortal: 5
+  portalPairs:
+  - {fileID: 730788812}
+  - {fileID: 395981087}
+  - {fileID: 1671182020}
 --- !u!1001 &1510458191
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2777,6 +2821,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1671182019}
+  - component: {fileID: 1671182020}
   m_Layer: 0
   m_Name: Portal Pair 3
   m_TagString: Untagged
@@ -2801,6 +2846,23 @@ Transform:
   - {fileID: 644226763}
   m_Father: {fileID: 1134451756}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1671182020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1671182018}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38b96fd18162f9e41ae760b53deb4ae0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PortalPair
+  portalA: {fileID: 1357650992}
+  portalB: {fileID: 644226763}
+  aPosTarget: {fileID: 1342463838}
+  bPosTarget: {fileID: 1285553044}
+  portalIndex: 0
 --- !u!1 &1729899304
 GameObject:
   m_ObjectHideFlags: 0

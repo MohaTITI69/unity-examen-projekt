@@ -82,6 +82,14 @@ public class AstarGrid : MonoBehaviour {
                 ColorTile(x, y, Color.white);
     }
 
+    public void ResetNodes() {
+        foreach (AstarNode n in grid) {
+            n.gCost  = 0;
+            n.hCost  = 0;
+            n.parent = null;
+        }
+    }
+
     public List<AstarNode> GetWalkableNodes() {
         List<AstarNode> walkable = new List<AstarNode>();
         foreach (AstarNode n in grid)
