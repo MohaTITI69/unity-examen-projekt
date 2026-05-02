@@ -1,12 +1,17 @@
+using System;
+using System.Collections;
 using UnityEngine;
 using static UnityEngine.InputSystem.InputAction;
 
-public class A_StarPlayerScript : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
     //inteded to be assigned by maze script when created by it
     public Maze2 correspondingMazeScript;
     public Vector2Int currentPos;
     public int[,] maze;
+    public bool isMoving = false;
+    public float delayBetweenSteeps = 0.2f;
+    public bool usedAbility = false;
 
 
     private void Start()
@@ -53,11 +58,16 @@ public class A_StarPlayerScript : MonoBehaviour
     }
 
 
-    public void goNorth(CallbackContext context)
+    public IEnumerator goNorth()
     {
-        if (context.performed)
+        if (isMoving)
         {
-            Debug.Log("TRycker go north");
+            yield return null;
+        }
+        else
+        {
+            isMoving = true;
+
             //är path
             if (maze[currentPos.x, currentPos.y + 1] == 0)
             {
@@ -65,7 +75,6 @@ public class A_StarPlayerScript : MonoBehaviour
                 maze[currentPos.x, currentPos.y + 1] = 2;
                 currentPos.y++;
                 updatePlayer();
-                Debug.Log("Gått north1");
             }
             //är goal
             else if (maze[currentPos.x, currentPos.y + 1] == 3)
@@ -75,16 +84,26 @@ public class A_StarPlayerScript : MonoBehaviour
                 currentPos.y++;
                 updatePlayer();
                 reachedGoal();
-                Debug.Log("Gått north2");
             }
+
+            yield return new WaitForSeconds(delayBetweenSteeps);
+
+            isMoving = false;
         }
+
     }
 
 
-    public void goSouth(CallbackContext context)
+    public IEnumerator goSouth()
     {
-        if (context.performed)
+        if (isMoving)
         {
+            yield return null;
+        }
+        else
+        {
+            isMoving = true;
+
             //är path
             if (maze[currentPos.x, currentPos.y - 1] == 0)
             {
@@ -102,14 +121,27 @@ public class A_StarPlayerScript : MonoBehaviour
                 updatePlayer();
                 reachedGoal();
             }
+
+            yield return new WaitForSeconds(delayBetweenSteeps);
+
+            isMoving = false;
         }
+
+
+        
     }
 
 
-    public void goEast(CallbackContext context)
+    public IEnumerator goEast()
     {
-        if (context.performed)
+        if (isMoving)
         {
+            yield return null;
+        }
+        else
+        {
+            isMoving = true;
+
             //är path
             if (maze[currentPos.x + 1, currentPos.y] == 0)
             {
@@ -127,14 +159,24 @@ public class A_StarPlayerScript : MonoBehaviour
                 updatePlayer();
                 reachedGoal();
             }
+
+            yield return new WaitForSeconds(delayBetweenSteeps);
+
+            isMoving = false;
         }
     }
 
 
-    public void goWest(CallbackContext context)
+    public IEnumerator goWest()
     {
-        if (context.performed)
+        if (isMoving)
         {
+            yield return null;
+        }
+        else
+        {
+            isMoving = true;
+
             //är path
             if (maze[currentPos.x - 1, currentPos.y] == 0)
             {
@@ -152,7 +194,47 @@ public class A_StarPlayerScript : MonoBehaviour
                 updatePlayer();
                 reachedGoal();
             }
+
+            yield return new WaitForSeconds(delayBetweenSteeps);
+
+            isMoving = false;
+        }
+
+        
+    }
+
+
+    public void pressedUp(CallbackContext context)
+    {
+        if (context.performed)
+        {
+            StartCoroutine(goNorth());
         }
     }
+
+    public void pressedDown(CallbackContext context)
+    {
+        if (context.performed)
+        {
+            StartCoroutine(goSouth());
+        }
+    }
+
+    public void pressedLeft(CallbackContext context)
+    {
+        if (context.performed)
+        {
+            StartCoroutine(goWest());
+        }
+    }
+
+    public void pressedRight(CallbackContext context)
+    {
+        if (context.performed)
+        {
+            StartCoroutine(goEast());
+        }
+    }
+
 
 }

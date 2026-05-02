@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2432935486642119206}
   - component: {fileID: 7660006513911911576}
   - component: {fileID: 4266251722839474116}
+  - component: {fileID: -8099819733566454674}
   - component: {fileID: -3648583090269205122}
   m_Layer: 0
   m_Name: AStarPlayer
@@ -130,6 +131,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::A_StarPlayer
   correspondingMazeScript: {fileID: 0}
   currentPos: {x: 0, y: 0}
+--- !u!114 &-8099819733566454674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5754246662903645582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e370697d3ad7b147bc6c0041cb6253d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::A_Star_Algorithm
+  PlayerController: {fileID: 0}
 --- !u!114 &-3648583090269205122
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -158,8 +172,8 @@ MonoBehaviour:
   - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 4266251722839474116}
-        m_TargetAssemblyTypeName: A_StarPlayerScript, Assembly-CSharp
-        m_MethodName: goWest
+        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
+        m_MethodName: pressedLeft
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -174,8 +188,8 @@ MonoBehaviour:
   - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 4266251722839474116}
-        m_TargetAssemblyTypeName: A_StarPlayerScript, Assembly-CSharp
-        m_MethodName: goEast
+        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
+        m_MethodName: pressedRight
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -190,8 +204,8 @@ MonoBehaviour:
   - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 4266251722839474116}
-        m_TargetAssemblyTypeName: A_StarPlayerScript, Assembly-CSharp
-        m_MethodName: goNorth
+        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
+        m_MethodName: pressedUp
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -206,8 +220,8 @@ MonoBehaviour:
   - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 4266251722839474116}
-        m_TargetAssemblyTypeName: A_StarPlayerScript, Assembly-CSharp
-        m_MethodName: goSouth
+        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
+        m_MethodName: pressedDown
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

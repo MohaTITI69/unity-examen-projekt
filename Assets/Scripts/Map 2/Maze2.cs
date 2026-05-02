@@ -43,7 +43,7 @@ public class Maze2 : MonoBehaviour
     {
         maze[startCell.x, startCell.y] = 2;
         Player1 = Instantiate(Player1Prefab, new Vector3(startCell.x, floor.position.y + 1, startCell.y) + startPosition, floor.rotation);
-        Player1.GetComponent<A_StarPlayerScript>().correspondingMazeScript = this;
+        Player1.GetComponent<PlayerController>().correspondingMazeScript = this;
     }
 
 
