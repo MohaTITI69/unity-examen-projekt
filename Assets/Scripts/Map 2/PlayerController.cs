@@ -9,8 +9,9 @@ public class PlayerController : MonoBehaviour
     public Maze2 correspondingMazeScript;
     public Vector2Int currentPos;
     public int[,] maze;
+    public GameObject[,] walls;
     public bool isMoving = false;
-    public float delayBetweenSteeps = 0.2f;
+    private float delayBetweenSteeps = 0.1f;//ändra tillbaka|||||||||||||||||||||||||||||
     public bool usedAbility = false;
 
 
@@ -22,6 +23,7 @@ public class PlayerController : MonoBehaviour
     void setup()
     {
         maze = correspondingMazeScript.maze;
+        walls = correspondingMazeScript.walls;
         currentPos = getPlayerPos();
         
     }
@@ -204,6 +206,49 @@ public class PlayerController : MonoBehaviour
     }
 
 
+    public IEnumerator doAbility()
+    {
+        if (!usedAbility)
+        {
+            //up
+            if ((maze[currentPos.x, currentPos.y + 1] == 1) && (currentPos.y + 1 < maze.GetLength(1) - 1))
+            {
+                Destroy(walls[currentPos.x, currentPos.y + 1]);
+                walls[currentPos.x, currentPos.y + 1] = null;
+                maze[currentPos.x, currentPos.y + 1] = 0;
+            }
+
+            //down
+            if ((maze[currentPos.x, currentPos.y - 1] == 1) && (currentPos.y - 1 > 0))
+            {
+                Destroy(walls[currentPos.x, currentPos.y - 1]);
+                walls[currentPos.x, currentPos.y - 1] = null;
+                maze[currentPos.x, currentPos.y - 1] = 0;
+            }
+
+            //right
+            if ((maze[currentPos.x + 1, currentPos.y] == 1) && (currentPos.x + 1 < maze.GetLength(0) - 1))
+            {
+                Destroy(walls[currentPos.x + 1, currentPos.y]);
+                walls[currentPos.x + 1, currentPos.y] = null;
+                maze[currentPos.x + 1, currentPos.y] = 0;
+            }
+
+            //left
+            if ((maze[currentPos.x - 1, currentPos.y] == 1) && (currentPos.x - 1 > 0))
+            {
+                Destroy(walls[currentPos.x - 1, currentPos.y]);
+                walls[currentPos.x - 1, currentPos.y] = null;
+                maze[currentPos.x - 1, currentPos.y] = 0;
+            }
+
+            usedAbility = true;
+        }
+        
+        yield break;
+    }
+
+
     public void pressedUp(CallbackContext context)
     {
         if (context.performed)
@@ -237,4 +282,11 @@ public class PlayerController : MonoBehaviour
     }
 
 
+    public void pressedAbility(CallbackContext context)
+    {
+        if (context.performed)
+        {
+            StartCoroutine(doAbility());
+        }
+    }
 }

@@ -9,6 +9,7 @@ public class Maze2 : MonoBehaviour
 
     [Header("Prefabs")]
     public GameObject wallPrefab;
+    public GameObject[,] walls;
     public GameObject Player1Prefab;
     public GameObject Player1;
     public GameObject goal;
@@ -147,6 +148,7 @@ public class Maze2 : MonoBehaviour
     //byger mazen från 2D griden vi skapat
     void BuildMaze()
     {
+        walls = new GameObject[width, height];
         startPosition = floor.transform.position - new Vector3(gameObject.transform.localScale.x / 2, 0, gameObject.transform.localScale.z / 2) + new Vector3(cellSize/2, 0, cellSize/2);
 
 
@@ -166,6 +168,8 @@ public class Maze2 : MonoBehaviour
                     {
                         wall.transform.SetParent(floor);
                     }
+
+                    walls[x, y] = wall;
                 }
             }
         }
