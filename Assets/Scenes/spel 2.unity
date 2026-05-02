@@ -286,7 +286,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Maze2
   wallPrefab: {fileID: 6424742046336665802, guid: 862a0cfc5936d044a9fe86d4c358845b, type: 3}
-  Player1Prefab: {fileID: 5754246662903645582, guid: 7e9b971c9300c834290ac489869e4eb9, type: 3}
+  Player1Prefab: {fileID: 5754246662903645582, guid: e73bb801ad7ff654f927ef2185c23d62, type: 3}
   Player1: {fileID: 0}
   goal: {fileID: 805980573442500497, guid: 15111df9d9bd3ca4b844d6540fa9ed7c, type: 3}
   cellSize: 1
@@ -303,7 +303,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 25, y: 1, z: 25}
+  m_LocalScale: {x: 9, y: 1, z: 9}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1754781567}

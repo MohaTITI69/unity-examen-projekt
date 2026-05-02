@@ -27,7 +27,7 @@ public class Maze2 : MonoBehaviour
     public int[,] maze; //0 = path, 1 = vägg, 2 = spelarens nuvarande position, 3 = goal
     private System.Random random = new System.Random();
 
-    void Start()
+    void Awake()
     {
         width = (int)transform.localScale.x; 
         height = (int)transform.localScale.z;
