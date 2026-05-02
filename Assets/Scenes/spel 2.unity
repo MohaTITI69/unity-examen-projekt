@@ -293,6 +293,7 @@ MonoBehaviour:
   floor: {fileID: 1441982533}
   startCell: {x: 0, y: 0}
   endCell: {x: 0, y: 0}
+  startPosition: {x: 0, y: 0, z: 0}
 --- !u!4 &1425385998
 Transform:
   m_ObjectHideFlags: 0

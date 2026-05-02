@@ -22,7 +22,7 @@ public class Maze2 : MonoBehaviour
     public Vector2Int startCell;
     public Vector2Int endCell = new Vector2Int();
 
-    Vector3 startPosition = Vector3.zero;
+    private Vector3 wallStartPosition = Vector3.zero;
 
     public int[,] maze; //0 = path, 1 = vägg, 2 = spelarens nuvarande position, 3 = goal
     private System.Random random = new System.Random();
@@ -43,7 +43,7 @@ public class Maze2 : MonoBehaviour
     void setupPlayers()
     {
         maze[startCell.x, startCell.y] = 2;
-        Player1 = Instantiate(Player1Prefab, new Vector3(startCell.x, floor.position.y + 1, startCell.y) + startPosition, floor.rotation);
+        Player1 = Instantiate(Player1Prefab, new Vector3(startCell.x, floor.position.y + 1, startCell.y) + wallStartPosition, floor.rotation);
         Player1.GetComponent<PlayerController>().correspondingMazeScript = this;
     }
 
@@ -149,7 +149,7 @@ public class Maze2 : MonoBehaviour
     void BuildMaze()
     {
         walls = new GameObject[width, height];
-        startPosition = floor.transform.position - new Vector3(gameObject.transform.localScale.x / 2, 0, gameObject.transform.localScale.z / 2) + new Vector3(cellSize/2, 0, cellSize/2);
+        wallStartPosition = transform.position - new Vector3(gameObject.transform.localScale.x / 2, 0, gameObject.transform.localScale.z / 2) + new Vector3(cellSize/2, 0, cellSize/2);
 
 
         for (int x = 0; x < width; x++)
@@ -158,7 +158,7 @@ public class Maze2 : MonoBehaviour
             {
                 if (maze[x, y] == 1)
                 {
-                    Vector3 pos = startPosition + new Vector3(x * cellSize, 1, y * cellSize);
+                    Vector3 pos = wallStartPosition + new Vector3(x * cellSize, 1, y * cellSize);
 
                     GameObject wall = Instantiate(wallPrefab, pos, Quaternion.identity);
 
@@ -178,7 +178,8 @@ public class Maze2 : MonoBehaviour
     //gets position at the given cordinate
     public Vector3 getPos(int x, int y)
     {
-        Vector3 startPos = new Vector3(x - transform.localScale.x / 2, transform.position.y + 1, y - transform.localScale.z / 2) + new Vector3(cellSize / 2, 0, cellSize / 2);
+        Vector3 startPos = new Vector3(x - transform.localScale.x / 2, transform.position.y + 1, y - transform.localScale.z / 2) + new Vector3(cellSize / 2, 0, cellSize / 2) + transform.position;
+        
         return startPos;
     }
 }
