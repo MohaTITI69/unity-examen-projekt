@@ -16,6 +16,7 @@ public class RL_Algorithm : Agent
     private const float GOAL_REWARD = 10f;
     private const float ABILITY_REWARD = 0f;
     private const float REVISIT_PENALTY = -0.001f;
+    private bool firstRun = true;
 
     private void Awake()
     {
@@ -35,9 +36,16 @@ public class RL_Algorithm : Agent
             return;
         }
 
+        if (firstRun)
+        {
+            firstRun = false;
+        }
+        else
+        {
+            player.correspondingMazeScript.setupAll();
+        }
 
-        player.correspondingMazeScript.setupAll();
-        visitedCells.Clear();
+            visitedCells.Clear();
         visitedCells.Add(player.currentPos);
     }
 
@@ -100,23 +108,23 @@ public class RL_Algorithm : Agent
 
         if (action == 0)
         {
-            validAction = player.instantGoNorth();//TryMove(Vector2Int.up);
+            validAction = player.instantGoNorth();
         }
         else if (action == 1)
         {
-            validAction = player.instantGoSouth();//TryMove(Vector2Int.down);
+            validAction = player.instantGoSouth();
         }
         else if (action == 2)
         {
-            validAction = player.instantGoEast(); //TryMove(Vector2Int.right);
+            validAction = player.instantGoEast();
         }
         else if (action == 3)
         {
-            validAction = player.instantGoWest();//TryMove(Vector2Int.left);
+            validAction = player.instantGoWest();
         }
         else if (action == 4)
         {
-            validAction = player.instantDoAbility();//TryUseAbility();
+            validAction = player.instantDoAbility();
         }
 
         
@@ -152,7 +160,7 @@ public class RL_Algorithm : Agent
         {
             AddReward(GOAL_REWARD);
             Debug.Log("RL reached goal!");
-            player.correspondingMazeScript.setupAll();
+            player.correspondingMazeScript.addResult(player.numberOfSteps, true);
             EndEpisode();
         }
     }

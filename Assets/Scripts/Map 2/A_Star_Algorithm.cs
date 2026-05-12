@@ -131,7 +131,6 @@ public class A_Star_Algorithm : MonoBehaviour
 
         foreach (Vector2Int nextCell in path)
         {
-            Debug.Log("rör på sig...");
             Vector2Int direction = nextCell - PlayerController.currentPos;
 
 
@@ -152,6 +151,7 @@ public class A_Star_Algorithm : MonoBehaviour
 
         if(PlayerController.currentPos == PlayerController.correspondingMazeScript.endCell)
         {
+            PlayerController.correspondingMazeScript.addResult(PlayerController.numberOfSteps, true);
             PlayerController.correspondingMazeScript.setupAll();
             SolveMaze();
         }

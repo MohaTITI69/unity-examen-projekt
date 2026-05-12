@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using static UnityEngine.InputSystem.InputAction;
 
 public class PlayerController : MonoBehaviour
@@ -12,7 +13,29 @@ public class PlayerController : MonoBehaviour
     private float delayBetweenSteeps = 0.3f;//ändra tillbaka|||||||||||||||||||||||||||||
     public bool usedAbility = false;
     public bool noMovmentDelay;
+    public bool humanPlayer;
+    public int numberOfSteps = 0;
+    
+    private bool upHeld;
+    private bool downHeld;
+    private bool leftHeld;
+    private bool rightHeld;
 
+
+    private void Update()
+    {
+        if (upHeld)
+            StartCoroutine(goNorth());
+
+        if (downHeld)
+            StartCoroutine(goSouth());
+
+        if (leftHeld)
+            StartCoroutine(goWest());
+
+        if (rightHeld)
+            StartCoroutine(goEast());
+    }
 
     private void Start()
     {
@@ -23,7 +46,17 @@ public class PlayerController : MonoBehaviour
     {
         currentPos = getPlayerPos();
         usedAbility = false;
+        numberOfSteps = 0;
         updatePlayer();
+    }
+
+    public void reachedGoal()
+    {
+        if (humanPlayer)
+        {
+            correspondingMazeScript.addResult(numberOfSteps, true);
+            correspondingMazeScript.setupAll();
+        }
     }
 
     Vector2Int getPlayerPos()
@@ -66,6 +99,7 @@ public class PlayerController : MonoBehaviour
             //är path
             if (correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] == 0)
             {
+                numberOfSteps++;
                 correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
                 correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] = 2;
                 currentPos.y++;
@@ -74,10 +108,12 @@ public class PlayerController : MonoBehaviour
             //är goal
             else if (correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] == 3)
             {
+                numberOfSteps++;
                 correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
                 correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] = 2;
                 currentPos.y++;
                 updatePlayer();
+                reachedGoal();
             }
 
             if (noMovmentDelay)
@@ -108,6 +144,7 @@ public class PlayerController : MonoBehaviour
             //är path
             if (correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] == 0)
             {
+                numberOfSteps++;
                 correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
                 correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] = 2;
                 currentPos.y--;
@@ -116,10 +153,12 @@ public class PlayerController : MonoBehaviour
             //är goal
             else if (correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] == 3)
             {
+                numberOfSteps++;
                 correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
                 correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] = 2;
                 currentPos.y--;
                 updatePlayer();
+                reachedGoal();
             }
 
             if (noMovmentDelay)
@@ -152,6 +191,7 @@ public class PlayerController : MonoBehaviour
             //är path
             if (correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] == 0)
             {
+                numberOfSteps++;
                 correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
                 correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] = 2;
                 currentPos.x++;
@@ -160,10 +200,12 @@ public class PlayerController : MonoBehaviour
             //är goal
             else if (correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] == 3)
             {
+                numberOfSteps++;
                 correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
                 correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] = 2;
                 currentPos.x++;
                 updatePlayer();
+                reachedGoal();
             }
 
             if (noMovmentDelay)
@@ -193,6 +235,7 @@ public class PlayerController : MonoBehaviour
             //är path
             if (correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] == 0)
             {
+                numberOfSteps++;
                 correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
                 correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] = 2;
                 currentPos.x--;
@@ -201,10 +244,12 @@ public class PlayerController : MonoBehaviour
             //är goal
             else if (correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] == 3)
             {
+                numberOfSteps++;
                 correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
                 correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] = 2;
                 currentPos.x--;
                 updatePlayer();
+                reachedGoal();
             }
 
             if (noMovmentDelay)
@@ -227,6 +272,7 @@ public class PlayerController : MonoBehaviour
     {
         if (!usedAbility)
         {
+            numberOfSteps++;
             //up
             if ((correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] == 1) && (currentPos.y + 1 < correspondingMazeScript.maze.GetLength(1) - 1))
             {
@@ -268,36 +314,23 @@ public class PlayerController : MonoBehaviour
 
     public void pressedUp(CallbackContext context)
     {
-        if (context.performed)
-        {
-            StartCoroutine(goNorth());
-        }
+        upHeld = context.ReadValueAsButton();
     }
 
     public void pressedDown(CallbackContext context)
     {
-        if (context.performed)
-        {
-            StartCoroutine(goSouth());
-        }
+        downHeld = context.ReadValueAsButton();
     }
 
     public void pressedLeft(CallbackContext context)
     {
-        if (context.performed)
-        {
-            StartCoroutine(goWest());
-        }
+        leftHeld = context.ReadValueAsButton();
     }
 
     public void pressedRight(CallbackContext context)
     {
-        if (context.performed)
-        {
-            StartCoroutine(goEast());
-        }
+        rightHeld = context.ReadValueAsButton();
     }
-
 
     public void pressedAbility(CallbackContext context)
     {
@@ -313,6 +346,7 @@ public class PlayerController : MonoBehaviour
         //är path
         if (correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] == 0)
         {
+            numberOfSteps++;
             correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
             correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] = 2;
             currentPos.y++;
@@ -322,11 +356,11 @@ public class PlayerController : MonoBehaviour
         //är goal
         else if (correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] == 3)
         {
+            numberOfSteps++;
             correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
             correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] = 2;
             currentPos.y++;
             updatePlayer();
-            //reachedGoal();   ta bort
             return true;
         }
         else
@@ -340,6 +374,7 @@ public class PlayerController : MonoBehaviour
         //är path
         if (correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] == 0)
         {
+            numberOfSteps++;
             correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
             correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] = 2;
             currentPos.y--;
@@ -349,11 +384,11 @@ public class PlayerController : MonoBehaviour
         //är goal
         else if (correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] == 3)
         {
+            numberOfSteps++;
             correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
             correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] = 2;
             currentPos.y--;
             updatePlayer();
-            //reachedGoal();   ta bort
             return true;
         }
         else
@@ -367,6 +402,7 @@ public class PlayerController : MonoBehaviour
         //är path
         if (correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] == 0)
         {
+            numberOfSteps++;
             correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
             correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] = 2;
             currentPos.x++;
@@ -376,11 +412,11 @@ public class PlayerController : MonoBehaviour
         //är goal
         else if (correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] == 3)
         {
+            numberOfSteps++;
             correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
             correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] = 2;
             currentPos.x++;
             updatePlayer();
-            //reachedGoal();   ta bort
             return true;
         }
         else
@@ -394,6 +430,7 @@ public class PlayerController : MonoBehaviour
         //är path
         if (correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] == 0)
         {
+            numberOfSteps++;
             correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
             correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] = 2;
             currentPos.x--;
@@ -403,11 +440,11 @@ public class PlayerController : MonoBehaviour
         //är goal
         else if (correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] == 3)
         {
+            numberOfSteps++;
             correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
             correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] = 2;
             currentPos.x--;
             updatePlayer();
-            //reachedGoal();   ta bort
             return true;
         }
         else
@@ -418,8 +455,11 @@ public class PlayerController : MonoBehaviour
 
     public bool instantDoAbility()
     {
+
         if (!usedAbility)
         {
+            numberOfSteps++;
+
             //up
             if ((correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] == 1) && (currentPos.y + 1 < correspondingMazeScript.maze.GetLength(1) - 1))
             {

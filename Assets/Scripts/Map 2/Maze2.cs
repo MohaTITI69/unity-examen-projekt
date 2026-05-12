@@ -1,8 +1,11 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class Maze2 : MonoBehaviour
 {
+    public TextMeshProUGUI textLabel;
+
     [Header("Maze Size")]
     int width = 0;
     int height = 0;
@@ -23,6 +26,14 @@ public class Maze2 : MonoBehaviour
     public Vector2Int startCell;
     public Vector2Int endCell = new Vector2Int();
 
+    [Header("Statistics")]
+    public float TimeSinceLastIteration = 0;
+    public float AvrageCompletionTime = 0;
+    public float AvrageCompletionRate = 1f;
+    public int AvrageNumberOfSteps = 0;
+    public int Iterations = 0;
+    public int SuccesfullIterationCount = 0;
+
     private Vector3 wallStartPosition = Vector3.zero;
 
     public int[,] maze; //0 = path, 1 = vägg, 2 = spelarens nuvarande position, 3 = goal
@@ -40,12 +51,15 @@ public class Maze2 : MonoBehaviour
 
     public void setupAll()
     {
-        cleanUp();// ||||||||||||||||||||||| FIXA BARA SÅ ATT SPELAREN SÄTTS TILLBAKA TILL (1, 1) SEN CHECKA OM AI INTE BUGGAR. CHECKA OCKSÅ FÖRST OM DU SOM SPELARE FUNKAR.
+        cleanUp();
 
+        setupTextLabel();
         GenerateMaze();
         BuildMaze();
         setupPlayers();
         generateRandomGoal();
+        TimeSinceLastIteration = Time.unscaledTime;
+        Iterations++;
     }
 
     void cleanUp()
@@ -65,6 +79,24 @@ public class Maze2 : MonoBehaviour
         }
     }
 
+    public void addResult(int nrOfSteps, bool succesfull)
+    {
+        AvrageNumberOfSteps = (nrOfSteps + AvrageNumberOfSteps * (Iterations - 1))/Iterations;
+        AvrageCompletionTime = ((Time.unscaledTime - TimeSinceLastIteration) + (AvrageCompletionTime * (Iterations - 1)))/Iterations;
+        if (succesfull)
+        {
+            AvrageCompletionRate = (float)(++SuccesfullIterationCount)/Iterations;
+        }
+        else
+        {
+            AvrageCompletionRate = (float)(SuccesfullIterationCount) / Iterations;
+        }
+    }
+
+    void setupTextLabel()
+    {
+        textLabel.text = "Avrage completion time: " + AvrageCompletionTime + " S\nAvrage completion rate: " + AvrageCompletionRate * 100 + "%\nAvrage number of steps: " + AvrageNumberOfSteps + "\nIteration count: " + Iterations;
+    }
 
     void setupPlayers()
     {
