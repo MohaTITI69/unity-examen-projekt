@@ -9,7 +9,7 @@ public class PlayerController : MonoBehaviour
     public Maze2 correspondingMazeScript;
     public Vector2Int currentPos;
     public bool isMoving = false;
-    private float delayBetweenSteeps = 0.1f;//ändra tillbaka|||||||||||||||||||||||||||||
+    private float delayBetweenSteeps = 0.3f;//ändra tillbaka|||||||||||||||||||||||||||||
     public bool usedAbility = false;
     public bool noMovmentDelay;
 
@@ -46,16 +46,6 @@ public class PlayerController : MonoBehaviour
     }
 
 
-    void reachedGoal()//fortsätt vidare sen
-    {
-        //Debug.Log("Nådde målet"); lägg tillbaka efter träning
-
-        /*|||||||||||Tillfälligt borta för RL träning, lägg tillbaka när andra bots används or somthing|||||||||
-        correspondingMazeScript.setupAll();
-        updatePlayer();
-        */
-    }
-
 
     void updatePlayer()
     {
@@ -88,7 +78,6 @@ public class PlayerController : MonoBehaviour
                 correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] = 2;
                 currentPos.y++;
                 updatePlayer();
-                reachedGoal();
             }
 
             if (noMovmentDelay)
@@ -131,7 +120,6 @@ public class PlayerController : MonoBehaviour
                 correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] = 2;
                 currentPos.y--;
                 updatePlayer();
-                reachedGoal();
             }
 
             if (noMovmentDelay)
@@ -176,7 +164,6 @@ public class PlayerController : MonoBehaviour
                 correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] = 2;
                 currentPos.x++;
                 updatePlayer();
-                reachedGoal();
             }
 
             if (noMovmentDelay)
@@ -218,7 +205,6 @@ public class PlayerController : MonoBehaviour
                 correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] = 2;
                 currentPos.x--;
                 updatePlayer();
-                reachedGoal();
             }
 
             if (noMovmentDelay)
@@ -340,7 +326,7 @@ public class PlayerController : MonoBehaviour
             correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] = 2;
             currentPos.y++;
             updatePlayer();
-            reachedGoal();
+            //reachedGoal();   ta bort
             return true;
         }
         else
@@ -367,7 +353,7 @@ public class PlayerController : MonoBehaviour
             correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] = 2;
             currentPos.y--;
             updatePlayer();
-            reachedGoal();
+            //reachedGoal();   ta bort
             return true;
         }
         else
@@ -394,7 +380,7 @@ public class PlayerController : MonoBehaviour
             correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] = 2;
             currentPos.x++;
             updatePlayer();
-            reachedGoal();
+            //reachedGoal();   ta bort
             return true;
         }
         else
@@ -421,7 +407,7 @@ public class PlayerController : MonoBehaviour
             correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] = 2;
             currentPos.x--;
             updatePlayer();
-            reachedGoal();
+            //reachedGoal();   ta bort
             return true;
         }
         else

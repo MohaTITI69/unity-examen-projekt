@@ -133,6 +133,7 @@ MonoBehaviour:
   correspondingMazeScript: {fileID: 0}
   currentPos: {x: 0, y: 0}
   isMoving: 0
+  delayBetweenSteeps: 0.1
   usedAbility: 0
   noMovmentDelay: 1
 --- !u!114 &-1403565556110703235
@@ -194,6 +195,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.ML-Agents::Unity.MLAgents.DecisionRequester
-  DecisionPeriod: 20
+  DecisionPeriod: 18
   DecisionStep: 0
   TakeActionsBetweenDecisions: 0

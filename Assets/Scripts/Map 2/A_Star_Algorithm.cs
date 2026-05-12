@@ -8,12 +8,6 @@ public class A_Star_Algorithm : MonoBehaviour
     [Header("Tillhörande Controller")]
     public PlayerController PlayerController;
 
-    [Header("Settings")]
-    public float moveDelay = 0.05f;
-    public bool runOnStart = true;
-
-    private int[,] maze;
-
     private class Node
     {
         public Vector2Int pos;
@@ -29,7 +23,6 @@ public class A_Star_Algorithm : MonoBehaviour
     private void Start()
     {
         PlayerController = GetComponent<PlayerController>();
-        maze = PlayerController.correspondingMazeScript.maze;
         Debug.Log("startar");
         SolveMaze();
         Debug.Log("Borde redan ha startat no?");
@@ -122,13 +115,13 @@ public class A_Star_Algorithm : MonoBehaviour
     private bool IsWalkable(Vector2Int pos, Vector2Int goal)
     {
         if (pos.x < 0 || pos.y < 0 ||
-            pos.x >= maze.GetLength(0) ||
-            pos.y >= maze.GetLength(1))
+            pos.x >= PlayerController.correspondingMazeScript.maze.GetLength(0) ||
+            pos.y >= PlayerController.correspondingMazeScript.maze.GetLength(1))
         {
             return false;
         }
 
-        int cell = maze[pos.x, pos.y];
+        int cell = PlayerController.correspondingMazeScript.maze[pos.x, pos.y];
 
         return cell == 0 || cell == 3 || pos == goal;
     }
@@ -155,6 +148,12 @@ public class A_Star_Algorithm : MonoBehaviour
             else
                 Debug.LogError("Invalid movement direction: " + direction + "   player current pos: " + PlayerController.currentPos + "    next cell: " + nextCell);
 
+        }
+
+        if(PlayerController.currentPos == PlayerController.correspondingMazeScript.endCell)
+        {
+            PlayerController.correspondingMazeScript.setupAll();
+            SolveMaze();
         }
 
         yield return null;

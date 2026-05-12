@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 7660006513911911576}
   - component: {fileID: 4266251722839474116}
   - component: {fileID: -8099819733566454674}
-  - component: {fileID: -3648583090269205122}
   m_Layer: 0
   m_Name: AStarPlayer
   m_TagString: Untagged
@@ -132,8 +131,8 @@ MonoBehaviour:
   correspondingMazeScript: {fileID: 0}
   currentPos: {x: 0, y: 0}
   isMoving: 0
-  delayBetweenSteeps: 0.2
   usedAbility: 0
+  noMovmentDelay: 0
 --- !u!114 &-8099819733566454674
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -147,115 +146,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::A_Star_Algorithm
   PlayerController: {fileID: 0}
-  moveDelay: 0.05
-  runOnStart: 1
---- !u!114 &-3648583090269205122
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5754246662903645582}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.PlayerInput
-  m_Actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  m_NotificationBehavior: 2
-  m_UIInputModule: {fileID: 0}
-  m_DeviceLostEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_DeviceRegainedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ControlsChangedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ActionEvents:
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 4266251722839474116}
-        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
-        m_MethodName: pressedLeft
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: 62395fe4-bab4-4de9-bf3d-02ad12ed31d3
-    m_ActionName: 'StyraSpelare/left[/Keyboard/leftArrow]'
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 4266251722839474116}
-        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
-        m_MethodName: pressedRight
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: 1dc87dd6-b344-449e-8093-6b5e1e5960a1
-    m_ActionName: 'StyraSpelare/right[/Keyboard/rightArrow]'
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 4266251722839474116}
-        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
-        m_MethodName: pressedUp
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: e59b960d-3a9a-48ff-907e-d068ed05e764
-    m_ActionName: 'StyraSpelare/Up[/Keyboard/upArrow]'
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 4266251722839474116}
-        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
-        m_MethodName: pressedDown
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: 7300aa44-a6cc-464d-978d-2d81eefcb398
-    m_ActionName: 'StyraSpelare/Down[/Keyboard/downArrow]'
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 4266251722839474116}
-        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
-        m_MethodName: pressedAbility
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: 18c311c3-f42b-4c6f-addd-424e67ecbe00
-    m_ActionName: 'StyraSpelare/doAbility[/Keyboard/space]'
-  m_NeverAutoSwitchControlSchemes: 0
-  m_DefaultControlScheme: 
-  m_DefaultActionMap: 
-  m_SplitScreenIndex: -1
-  m_Camera: {fileID: 0}
