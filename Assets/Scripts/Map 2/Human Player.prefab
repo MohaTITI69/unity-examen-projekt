@@ -132,6 +132,7 @@ MonoBehaviour:
   currentPos: {x: 0, y: 0}
   isMoving: 0
   usedAbility: 0
+  noMovmentDelay: 1
 --- !u!114 &-3648583090269205122
 MonoBehaviour:
   m_ObjectHideFlags: 0

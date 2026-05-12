@@ -8,11 +8,10 @@ public class PlayerController : MonoBehaviour
     //inteded to be assigned by maze script when created by it
     public Maze2 correspondingMazeScript;
     public Vector2Int currentPos;
-    public int[,] maze;
-    public GameObject[,] walls;
     public bool isMoving = false;
     private float delayBetweenSteeps = 0.1f;//ändra tillbaka|||||||||||||||||||||||||||||
     public bool usedAbility = false;
+    public bool noMovmentDelay;
 
 
     private void Start()
@@ -20,23 +19,22 @@ public class PlayerController : MonoBehaviour
         setup();
     }
 
-    void setup()
+    public void setup()
     {
-        maze = correspondingMazeScript.maze;
-        walls = correspondingMazeScript.walls;
         currentPos = getPlayerPos();
-        
+        usedAbility = false;
+        updatePlayer();
     }
 
     Vector2Int getPlayerPos()
     {
         //y
-        for (int y = 0; y < maze.GetLength(1); y++)
+        for (int y = 0; y < correspondingMazeScript.maze.GetLength(1); y++)
         {
             //x
-            for (int x = 0; x < maze.GetLength(0); x++)
+            for (int x = 0; x < correspondingMazeScript.maze.GetLength(0); x++)
             {
-                if (maze[x, y] == 2)
+                if (correspondingMazeScript.maze[x, y] == 2)
                 {
                     return new Vector2Int(x, y);
                 }
@@ -50,7 +48,12 @@ public class PlayerController : MonoBehaviour
 
     void reachedGoal()//fortsätt vidare sen
     {
-        Debug.Log("Nådde målet");
+        //Debug.Log("Nådde målet"); lägg tillbaka efter träning
+
+        /*|||||||||||Tillfälligt borta för RL träning, lägg tillbaka när andra bots används or somthing|||||||||
+        correspondingMazeScript.setupAll();
+        updatePlayer();
+        */
     }
 
 
@@ -71,24 +74,31 @@ public class PlayerController : MonoBehaviour
             isMoving = true;
 
             //är path
-            if (maze[currentPos.x, currentPos.y + 1] == 0)
+            if (correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] == 0)
             {
-                maze[currentPos.x, currentPos.y] = 0;
-                maze[currentPos.x, currentPos.y + 1] = 2;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] = 2;
                 currentPos.y++;
                 updatePlayer();
             }
             //är goal
-            else if (maze[currentPos.x, currentPos.y + 1] == 3)
+            else if (correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] == 3)
             {
-                maze[currentPos.x, currentPos.y] = 0;
-                maze[currentPos.x, currentPos.y + 1] = 2;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] = 2;
                 currentPos.y++;
                 updatePlayer();
                 reachedGoal();
             }
 
-            yield return new WaitForSeconds(delayBetweenSteeps);
+            if (noMovmentDelay)
+            {
+                yield return null;
+            }
+            else
+            {
+                yield return new WaitForSeconds(delayBetweenSteeps);
+            }
 
             isMoving = false;
         }
@@ -107,24 +117,31 @@ public class PlayerController : MonoBehaviour
             isMoving = true;
 
             //är path
-            if (maze[currentPos.x, currentPos.y - 1] == 0)
+            if (correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] == 0)
             {
-                maze[currentPos.x, currentPos.y] = 0;
-                maze[currentPos.x, currentPos.y - 1] = 2;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] = 2;
                 currentPos.y--;
                 updatePlayer();
             }
             //är goal
-            else if (maze[currentPos.x, currentPos.y - 1] == 3)
+            else if (correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] == 3)
             {
-                maze[currentPos.x, currentPos.y] = 0;
-                maze[currentPos.x, currentPos.y - 1] = 2;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] = 2;
                 currentPos.y--;
                 updatePlayer();
                 reachedGoal();
             }
 
-            yield return new WaitForSeconds(delayBetweenSteeps);
+            if (noMovmentDelay)
+            {
+                yield return null;
+            }
+            else
+            {
+                yield return new WaitForSeconds(delayBetweenSteeps);
+            }
 
             isMoving = false;
         }
@@ -145,24 +162,31 @@ public class PlayerController : MonoBehaviour
             isMoving = true;
 
             //är path
-            if (maze[currentPos.x + 1, currentPos.y] == 0)
+            if (correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] == 0)
             {
-                maze[currentPos.x, currentPos.y] = 0;
-                maze[currentPos.x + 1, currentPos.y] = 2;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+                correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] = 2;
                 currentPos.x++;
                 updatePlayer();
             }
             //är goal
-            else if (maze[currentPos.x + 1, currentPos.y] == 3)
+            else if (correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] == 3)
             {
-                maze[currentPos.x, currentPos.y] = 0;
-                maze[currentPos.x + 1, currentPos.y] = 2;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+                correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] = 2;
                 currentPos.x++;
                 updatePlayer();
                 reachedGoal();
             }
 
-            yield return new WaitForSeconds(delayBetweenSteeps);
+            if (noMovmentDelay)
+            {
+                yield return null;
+            }
+            else
+            {
+                yield return new WaitForSeconds(delayBetweenSteeps);
+            }
 
             isMoving = false;
         }
@@ -180,24 +204,31 @@ public class PlayerController : MonoBehaviour
             isMoving = true;
 
             //är path
-            if (maze[currentPos.x - 1, currentPos.y] == 0)
+            if (correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] == 0)
             {
-                maze[currentPos.x, currentPos.y] = 0;
-                maze[currentPos.x - 1, currentPos.y] = 2;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+                correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] = 2;
                 currentPos.x--;
                 updatePlayer();
             }
             //är goal
-            else if (maze[currentPos.x - 1, currentPos.y] == 3)
+            else if (correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] == 3)
             {
-                maze[currentPos.x, currentPos.y] = 0;
-                maze[currentPos.x - 1, currentPos.y] = 2;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+                correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] = 2;
                 currentPos.x--;
                 updatePlayer();
                 reachedGoal();
             }
 
-            yield return new WaitForSeconds(delayBetweenSteeps);
+            if (noMovmentDelay)
+            {
+                yield return null;
+            }
+            else
+            {
+                yield return new WaitForSeconds(delayBetweenSteeps);
+            }
 
             isMoving = false;
         }
@@ -211,35 +242,35 @@ public class PlayerController : MonoBehaviour
         if (!usedAbility)
         {
             //up
-            if ((maze[currentPos.x, currentPos.y + 1] == 1) && (currentPos.y + 1 < maze.GetLength(1) - 1))
+            if ((correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] == 1) && (currentPos.y + 1 < correspondingMazeScript.maze.GetLength(1) - 1))
             {
-                Destroy(walls[currentPos.x, currentPos.y + 1]);
-                walls[currentPos.x, currentPos.y + 1] = null;
-                maze[currentPos.x, currentPos.y + 1] = 0;
+                Destroy(correspondingMazeScript.walls[currentPos.x, currentPos.y + 1]);
+                correspondingMazeScript.walls[currentPos.x, currentPos.y + 1] = null;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] = 0;
             }
 
             //down
-            if ((maze[currentPos.x, currentPos.y - 1] == 1) && (currentPos.y - 1 > 0))
+            if ((correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] == 1) && (currentPos.y - 1 > 0))
             {
-                Destroy(walls[currentPos.x, currentPos.y - 1]);
-                walls[currentPos.x, currentPos.y - 1] = null;
-                maze[currentPos.x, currentPos.y - 1] = 0;
+                Destroy(correspondingMazeScript.walls[currentPos.x, currentPos.y - 1]);
+                correspondingMazeScript.walls[currentPos.x, currentPos.y - 1] = null;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] = 0;
             }
 
             //right
-            if ((maze[currentPos.x + 1, currentPos.y] == 1) && (currentPos.x + 1 < maze.GetLength(0) - 1))
+            if ((correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] == 1) && (currentPos.x + 1 < correspondingMazeScript.maze.GetLength(0) - 1))
             {
-                Destroy(walls[currentPos.x + 1, currentPos.y]);
-                walls[currentPos.x + 1, currentPos.y] = null;
-                maze[currentPos.x + 1, currentPos.y] = 0;
+                Destroy(correspondingMazeScript.walls[currentPos.x + 1, currentPos.y]);
+                correspondingMazeScript.walls[currentPos.x + 1, currentPos.y] = null;
+                correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] = 0;
             }
 
             //left
-            if ((maze[currentPos.x - 1, currentPos.y] == 1) && (currentPos.x - 1 > 0))
+            if ((correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] == 1) && (currentPos.x - 1 > 0))
             {
-                Destroy(walls[currentPos.x - 1, currentPos.y]);
-                walls[currentPos.x - 1, currentPos.y] = null;
-                maze[currentPos.x - 1, currentPos.y] = 0;
+                Destroy(correspondingMazeScript.walls[currentPos.x - 1, currentPos.y]);
+                correspondingMazeScript.walls[currentPos.x - 1, currentPos.y] = null;
+                correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] = 0;
             }
 
             usedAbility = true;
@@ -289,4 +320,159 @@ public class PlayerController : MonoBehaviour
             StartCoroutine(doAbility());
         }
     }
+
+
+    public bool instantGoNorth()
+    {
+        //är path
+        if (correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] == 0)
+        {
+            correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+            correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] = 2;
+            currentPos.y++;
+            updatePlayer();
+            return true;
+        }
+        //är goal
+        else if (correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] == 3)
+        {
+            correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+            correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] = 2;
+            currentPos.y++;
+            updatePlayer();
+            reachedGoal();
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public bool instantGoSouth()
+    {
+        //är path
+        if (correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] == 0)
+        {
+            correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+            correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] = 2;
+            currentPos.y--;
+            updatePlayer();
+            return true;
+        }
+        //är goal
+        else if (correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] == 3)
+        {
+            correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+            correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] = 2;
+            currentPos.y--;
+            updatePlayer();
+            reachedGoal();
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public bool instantGoEast()
+    {
+        //är path
+        if (correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] == 0)
+        {
+            correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+            correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] = 2;
+            currentPos.x++;
+            updatePlayer();
+            return true;
+        }
+        //är goal
+        else if (correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] == 3)
+        {
+            correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+            correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] = 2;
+            currentPos.x++;
+            updatePlayer();
+            reachedGoal();
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public bool instantGoWest()
+    {
+        //är path
+        if (correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] == 0)
+        {
+            correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+            correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] = 2;
+            currentPos.x--;
+            updatePlayer();
+            return true;
+        }
+        //är goal
+        else if (correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] == 3)
+        {
+            correspondingMazeScript.maze[currentPos.x, currentPos.y] = 0;
+            correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] = 2;
+            currentPos.x--;
+            updatePlayer();
+            reachedGoal();
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public bool instantDoAbility()
+    {
+        if (!usedAbility)
+        {
+            //up
+            if ((correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] == 1) && (currentPos.y + 1 < correspondingMazeScript.maze.GetLength(1) - 1))
+            {
+                Destroy(correspondingMazeScript.walls[currentPos.x, currentPos.y + 1]);
+                correspondingMazeScript.walls[currentPos.x, currentPos.y + 1] = null;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y + 1] = 0;
+            }
+
+            //down
+            if ((correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] == 1) && (currentPos.y - 1 > 0))
+            {
+                Destroy(correspondingMazeScript.walls[currentPos.x, currentPos.y - 1]);
+                correspondingMazeScript.walls[currentPos.x, currentPos.y - 1] = null;
+                correspondingMazeScript.maze[currentPos.x, currentPos.y - 1] = 0;
+            }
+
+            //right
+            if ((correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] == 1) && (currentPos.x + 1 < correspondingMazeScript.maze.GetLength(0) - 1))
+            {
+                Destroy(correspondingMazeScript.walls[currentPos.x + 1, currentPos.y]);
+                correspondingMazeScript.walls[currentPos.x + 1, currentPos.y] = null;
+                correspondingMazeScript.maze[currentPos.x + 1, currentPos.y] = 0;
+            }
+
+            //left
+            if ((correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] == 1) && (currentPos.x - 1 > 0))
+            {
+                Destroy(correspondingMazeScript.walls[currentPos.x - 1, currentPos.y]);
+                correspondingMazeScript.walls[currentPos.x - 1, currentPos.y] = null;
+                correspondingMazeScript.maze[currentPos.x - 1, currentPos.y] = 0;
+            }
+
+            usedAbility = true;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
 }

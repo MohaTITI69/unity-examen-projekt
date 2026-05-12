@@ -12,6 +12,7 @@ public class Maze2 : MonoBehaviour
     public GameObject[,] walls;
     public GameObject Player1Prefab;
     public GameObject Player1;
+    public GameObject goalPrefab;
     public GameObject goal;
 
     [Header("Layout")]
@@ -29,22 +30,55 @@ public class Maze2 : MonoBehaviour
 
     void Awake()
     {
+        random = new System.Random();
+
         width = (int)transform.localScale.x; 
         height = (int)transform.localScale.z;
 
+        setupAll();
+    }
+
+    public void setupAll()
+    {
+        cleanUp();// ||||||||||||||||||||||| FIXA BARA SÅ ATT SPELAREN SÄTTS TILLBAKA TILL (1, 1) SEN CHECKA OM AI INTE BUGGAR. CHECKA OCKSÅ FÖRST OM DU SOM SPELARE FUNKAR.
 
         GenerateMaze();
         BuildMaze();
-        generateRandomGoal();
         setupPlayers();
+        generateRandomGoal();
+    }
+
+    void cleanUp()
+    {
+        if (goal != null)
+        {
+            DestroyImmediate(goal);
+            goal = null;
+        }
+
+
+        int temp = transform.Find("Floor").childCount;
+
+        for (int i = 0; i < temp; i++)
+        {
+            DestroyImmediate(transform.Find("Floor").GetChild(0).gameObject);
+        }
     }
 
 
     void setupPlayers()
     {
         maze[startCell.x, startCell.y] = 2;
-        Player1 = Instantiate(Player1Prefab, new Vector3(startCell.x, floor.position.y + 1, startCell.y) + wallStartPosition, floor.rotation);
-        Player1.GetComponent<PlayerController>().correspondingMazeScript = this;
+        
+        if(Player1 == null)
+        {
+            Player1 = Instantiate(Player1Prefab, getPos(startCell.x, startCell.y), floor.rotation);
+            Player1.GetComponent<PlayerController>().correspondingMazeScript = this;
+        }
+        else
+        {
+            Player1.GetComponent<PlayerController>().setup();
+        }
     }
 
 
@@ -74,13 +108,12 @@ public class Maze2 : MonoBehaviour
         {
             int x = random.Next(width);
             int y = random.Next(height);
-            if (maze[x, y] == 0)
+            if ((maze[x, y] == 0) && !((x == startCell.x) && (y == startCell.y)))
             {
                 maze[x, y] = 3;
 
-                Debug.Log("skapar goal?");
                 endCell = new Vector2Int(x, y);
-                Instantiate(goal, getPos(x, y), Quaternion.identity);//ta bort?
+                goal = Instantiate(goalPrefab, getPos(x, y), Quaternion.identity);//ta bort?
                 //Skapa en grön kub så man kan se var målen är.
                 break;
             }
@@ -179,7 +212,8 @@ public class Maze2 : MonoBehaviour
     public Vector3 getPos(int x, int y)
     {
         Vector3 startPos = new Vector3(x - transform.localScale.x / 2, transform.position.y + 1, y - transform.localScale.z / 2) + new Vector3(cellSize / 2, 0, cellSize / 2) + transform.position;
-        
+
+        //Debug.Log("pos: (" + x + ", " + y + ") " + startPos);
         return startPos;
     }
 }

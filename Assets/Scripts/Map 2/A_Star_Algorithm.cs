@@ -29,7 +29,7 @@ public class A_Star_Algorithm : MonoBehaviour
     private void Start()
     {
         PlayerController = GetComponent<PlayerController>();
-        maze = PlayerController.maze;
+        maze = PlayerController.correspondingMazeScript.maze;
         Debug.Log("startar");
         SolveMaze();
         Debug.Log("Borde redan ha startat no?");

@@ -14,8 +14,8 @@ GameObject:
   - component: {fileID: 7660006513911911576}
   - component: {fileID: 4266251722839474116}
   - component: {fileID: -1403565556110703235}
-  - component: {fileID: 548597625405069184}
-  - component: {fileID: 4459840374979404812}
+  - component: {fileID: 1248556609449099339}
+  - component: {fileID: -3134439575070977432}
   m_Layer: 0
   m_Name: RL Player
   m_TagString: Untagged
@@ -129,11 +129,12 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 92b4af60bf563674a845415c45848bbe, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::A_StarPlayer
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   correspondingMazeScript: {fileID: 0}
   currentPos: {x: 0, y: 0}
   isMoving: 0
   usedAbility: 0
+  noMovmentDelay: 1
 --- !u!114 &-1403565556110703235
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -147,7 +148,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.ML-Agents::Unity.MLAgents.Policies.BehaviorParameters
   m_BrainParameters:
-    VectorObservationSize: 11
+    VectorObservationSize: 84
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -156,16 +157,16 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 0}
+  m_Model: {fileID: 5022602860645237092, guid: 39c8d1ea910c9624cbe536ac151e4eec, type: 3}
   m_InferenceDevice: 0
-  m_BehaviorType: 1
+  m_BehaviorType: 2
   m_BehaviorName: MazeAgent
   TeamId: 0
   m_UseChildSensors: 1
   m_UseChildActuators: 1
   m_DeterministicInference: 0
   m_ObservableAttributeHandling: 0
---- !u!114 &548597625405069184
+--- !u!114 &1248556609449099339
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -174,14 +175,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 5754246662903645582}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b559648caace45d4b86e7b806858c8a9, type: 3}
+  m_Script: {fileID: 11500000, guid: bd57cf9bba5f0904a9a3be80dd534e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RL_Algorithm
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 500
---- !u!114 &4459840374979404812
+--- !u!114 &-3134439575070977432
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -193,6 +194,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.ML-Agents::Unity.MLAgents.DecisionRequester
-  DecisionPeriod: 5
+  DecisionPeriod: 20
   DecisionStep: 0
-  TakeActionsBetweenDecisions: 1
+  TakeActionsBetweenDecisions: 0
