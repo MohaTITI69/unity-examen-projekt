@@ -29,9 +29,10 @@ public class Maze2 : MonoBehaviour
     [Header("Statistics")]
     public float TimeSinceLastIteration = 0;
     public float AvrageCompletionTime = 0;
-    public float AvrageCompletionRate = 1f;
-    public int AvrageNumberOfSteps = 0;
-    public int Iterations = 0;
+    public float AvrageCompletionRate = 0f;
+    public float AvrageNumberOfSteps = 0;
+    public int StartedIterations = 0;
+    public int FinishedIterations = 0;
     public int SuccesfullIterationCount = 0;
 
     private Vector3 wallStartPosition = Vector3.zero;
@@ -53,13 +54,15 @@ public class Maze2 : MonoBehaviour
     {
         cleanUp();
 
-        setupTextLabel();
         GenerateMaze();
         BuildMaze();
         setupPlayers();
         generateRandomGoal();
+
         TimeSinceLastIteration = Time.unscaledTime;
-        Iterations++;
+        StartedIterations++;
+
+        setupTextLabel();
     }
 
     void cleanUp()
@@ -81,21 +84,32 @@ public class Maze2 : MonoBehaviour
 
     public void addResult(int nrOfSteps, bool succesfull)
     {
-        AvrageNumberOfSteps = (nrOfSteps + AvrageNumberOfSteps * (Iterations - 1))/Iterations;
-        AvrageCompletionTime = ((Time.unscaledTime - TimeSinceLastIteration) + (AvrageCompletionTime * (Iterations - 1)))/Iterations;
+        FinishedIterations++;
+
+        float completionTime = Time.unscaledTime - TimeSinceLastIteration;
+
+        AvrageNumberOfSteps =
+            ((AvrageNumberOfSteps * (FinishedIterations - 1)) + nrOfSteps) / FinishedIterations;
+
+        AvrageCompletionTime =
+            ((AvrageCompletionTime * (FinishedIterations - 1)) + completionTime) / FinishedIterations;
+
         if (succesfull)
-        {
-            AvrageCompletionRate = (float)(++SuccesfullIterationCount)/Iterations;
-        }
-        else
-        {
-            AvrageCompletionRate = (float)(SuccesfullIterationCount) / Iterations;
-        }
+            SuccesfullIterationCount++;
+
+        AvrageCompletionRate = (float)SuccesfullIterationCount / FinishedIterations;
+
+        setupTextLabel();
     }
 
     void setupTextLabel()
     {
-        textLabel.text = "Avrage completion time: " + AvrageCompletionTime + " S\nAvrage completion rate: " + AvrageCompletionRate * 100 + "%\nAvrage number of steps: " + AvrageNumberOfSteps + "\nIteration count: " + Iterations;
+        textLabel.text =
+            "Average completion time: " + Mathf.Round(AvrageCompletionTime * 1000) / 1000 + "s" +
+            "\nAverage completion rate: " + Mathf.Round(AvrageCompletionRate * 1000) / 10 + "%" +
+            "\nAverage number of steps: " + Mathf.Round(AvrageNumberOfSteps * 100) / 100 +
+            "\nFinished iterations: " + FinishedIterations +
+            "\nStarted iterations: " + StartedIterations;
     }
 
     void setupPlayers()

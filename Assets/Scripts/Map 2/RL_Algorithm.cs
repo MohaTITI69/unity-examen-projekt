@@ -17,6 +17,7 @@ public class RL_Algorithm : Agent
     private const float ABILITY_REWARD = 0f;
     private const float REVISIT_PENALTY = -0.001f;
     private bool firstRun = true;
+    private bool episodeSucceeded = false;
 
     private void Awake()
     {
@@ -42,7 +43,9 @@ public class RL_Algorithm : Agent
         }
         else
         {
+            player.correspondingMazeScript.addResult(player.numberOfSteps, episodeSucceeded);
             player.correspondingMazeScript.setupAll();
+            episodeSucceeded = false;
         }
 
             visitedCells.Clear();
@@ -85,11 +88,11 @@ public class RL_Algorithm : Agent
             }
         }
 
-        // Direction to goal, normalized
+        // Riktning till målet(normaliserad enhetsvektor)
         sensor.AddObservation((goal.x - pos.x) / (float)MAZE_SIZE);
         sensor.AddObservation((goal.y - pos.y) / (float)MAZE_SIZE);
 
-        // Ability available?
+        // Har vi special kraften?
         sensor.AddObservation(player.usedAbility ? 0f : 1f);
     }
 
@@ -160,7 +163,7 @@ public class RL_Algorithm : Agent
         {
             AddReward(GOAL_REWARD);
             Debug.Log("RL reached goal!");
-            player.correspondingMazeScript.addResult(player.numberOfSteps, true);
+            episodeSucceeded = true;
             EndEpisode();
         }
     }

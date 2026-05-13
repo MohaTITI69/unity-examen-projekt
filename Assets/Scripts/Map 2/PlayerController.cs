@@ -22,7 +22,7 @@ public class PlayerController : MonoBehaviour
     private bool rightHeld;
 
 
-    private void Update()
+    private void FixedUpdate()
     {
         if (upHeld)
             StartCoroutine(goNorth());
