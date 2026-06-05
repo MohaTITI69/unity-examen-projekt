@@ -32,7 +32,7 @@ public class A_Star_Algorithm : MonoBehaviour
 
 
 
-
+    //körs en gång i början
     private void SolveMaze()
     {
         Vector2Int start = PlayerController.currentPos;
@@ -52,6 +52,7 @@ public class A_Star_Algorithm : MonoBehaviour
 
         StartCoroutine(PerformThePath(path));
     }
+
 
     private List<Vector2Int> FindPath(Vector2Int start, Vector2Int goal)
     {
@@ -129,8 +130,22 @@ public class A_Star_Algorithm : MonoBehaviour
     private IEnumerator PerformThePath(List<Vector2Int> path)
     {
 
-        foreach (Vector2Int nextCell in path)
+        //last minute adjustments, plz dont judge the bad code in here
+
+        int stepsBeforeAblityUse = 0;
+
+        if (PlayerController.usedAbility == false)
         {
+            stepsBeforeAblityUse = Mathf.RoundToInt(Random.value * path.Count);
+        }
+
+        int nrOfSteps = (PlayerController.usedAbility ? path.Count : stepsBeforeAblityUse);
+        
+        Debug.Log("Number of steps before ability use: " + nrOfSteps + " ability is used: " + PlayerController.usedAbility);
+
+        for (int i = 0; i < nrOfSteps; i++)
+        {
+            Vector2Int nextCell = path[i];
             Vector2Int direction = nextCell - PlayerController.currentPos;
 
 
@@ -149,13 +164,31 @@ public class A_Star_Algorithm : MonoBehaviour
 
         }
 
-        if(PlayerController.currentPos == PlayerController.correspondingMazeScript.endCell)
+        if (PlayerController.currentPos == PlayerController.correspondingMazeScript.endCell)
         {
             PlayerController.correspondingMazeScript.addResult(PlayerController.numberOfSteps, true);
             PlayerController.correspondingMazeScript.setupAll();
             SolveMaze();
         }
+        else if (PlayerController.usedAbility == false)
+        {
+            //last minute adjustment, plz dont jusdge the bad code
+            Vector2Int tempStart = PlayerController.currentPos;
+            Vector2Int tempGoal = PlayerController.correspondingMazeScript.endCell;
+            int pathLength1 = FindPath(tempStart, tempGoal).Count;
 
-        yield return null;
+            StartCoroutine(PlayerController.doAbility());
+
+            int pathLength2 = FindPath(tempStart, tempGoal).Count;
+
+            if (pathLength2 <  pathLength1)
+            {
+                PlayerController.correspondingMazeScript.improvedPathCount++;
+            }
+
+            SolveMaze();
+        }
+
+            yield return null;
     }
 }

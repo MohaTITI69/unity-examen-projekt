@@ -303,8 +303,8 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 0
-  orthographic size: 5
+  orthographic: 1
+  orthographic size: 12.75
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -329,7 +329,7 @@ Transform:
   m_GameObject: {fileID: 663109370}
   serializedVersion: 2
   m_LocalRotation: {x: 0.6931841, y: -0.0010811463, z: 0.0010397714, w: 0.72075903}
-  m_LocalPosition: {x: 1.2866849, y: 35.935867, z: 0.9197941}
+  m_LocalPosition: {x: -0, y: 35.935867, z: 0.92}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -474,6 +474,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Maze RL AI
       objectReference: {fileID: 0}
+    - target: {fileID: 1234693635131936773, guid: e43084c5ccd84334e85a2d93fcf613e1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5359935827044167411, guid: e43084c5ccd84334e85a2d93fcf613e1, type: 3}
       propertyPath: m_LocalPosition.x
       value: 15
@@ -531,9 +535,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: Maze A*
       objectReference: {fileID: 0}
+    - target: {fileID: 1256866208454770684, guid: 8be8f332a233b52438725b5417f28005, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2423843385772530040, guid: 8be8f332a233b52438725b5417f28005, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -15
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2423843385772530040, guid: 8be8f332a233b52438725b5417f28005, type: 3}
       propertyPath: m_LocalPosition.y
@@ -587,6 +595,10 @@ PrefabInstance:
     - target: {fileID: 2879865157511976069, guid: 1be0039a9cf731d4dbb3b5f5130efc53, type: 3}
       propertyPath: m_Name
       value: Maze Human
+      objectReference: {fileID: 0}
+    - target: {fileID: 2879865157511976069, guid: 1be0039a9cf731d4dbb3b5f5130efc53, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8720887334867539445, guid: 1be0039a9cf731d4dbb3b5f5130efc53, type: 3}
       propertyPath: m_LocalPosition.x

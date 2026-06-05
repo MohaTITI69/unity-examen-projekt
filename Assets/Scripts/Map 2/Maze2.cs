@@ -34,6 +34,7 @@ public class Maze2 : MonoBehaviour
     public int StartedIterations = 0;
     public int FinishedIterations = 0;
     public int SuccesfullIterationCount = 0;
+    public int improvedPathCount = 0;//last minute measure, plz dont judge the bad code
 
     private Vector3 wallStartPosition = Vector3.zero;
 
@@ -109,7 +110,8 @@ public class Maze2 : MonoBehaviour
             "\nAverage completion rate: " + Mathf.Round(AvrageCompletionRate * 1000) / 10 + "%" +
             "\nAverage number of steps: " + Mathf.Round(AvrageNumberOfSteps * 100) / 100 +
             "\nFinished iterations: " + FinishedIterations +
-            "\nStarted iterations: " + StartedIterations;
+            "\nStarted iterations: " + StartedIterations +
+            "\nImproved path count: " + improvedPathCount;
     }
 
     void setupPlayers()
