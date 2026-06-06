@@ -12,14 +12,14 @@ public class RL_Algorithm : Agent
     private HashSet<Vector2Int> visitedCells = new HashSet<Vector2Int>();
     private A_Star_Algorithm temp; //last minute adjustment dont flame plz
 
-    public float decisionDelay = 0.5f;//last minute adjustment dont flame plz
+    private float decisionDelay = 0.3f;//last minute adjustment dont flame plz
     private bool waitingForDecision = false;//last minute adjustment dont flame plz
 
     private const int MAZE_SIZE = 9; // For 9x9 maze
     private const float STEP_PENALTY = -0.01f;
     private const float INVALID_MOVE_PENALTY = -0.08f;
     private const float GOAL_REWARD = 10f;
-    private const float ABILITY_REWARD = 0f;
+    private const float ABILITY_REWARD = -0.02f;
     private const float REVISIT_PENALTY = -0.001f;
     private bool firstRun = true;
     private bool episodeSucceeded = false;

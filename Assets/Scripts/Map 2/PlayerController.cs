@@ -10,7 +10,7 @@ public class PlayerController : MonoBehaviour
     public Maze2 correspondingMazeScript;
     public Vector2Int currentPos;
     public bool isMoving = false;
-    private float delayBetweenSteeps = 0.5f;//ändra tillbaka|||||||||||||||||||||||||||||
+    private float delayBetweenSteeps = 0.3f;//ändra tillbaka|||||||||||||||||||||||||||||
     public bool usedAbility = false;
     public bool noMovmentDelay;
     public bool humanPlayer;
