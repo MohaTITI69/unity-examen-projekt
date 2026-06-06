@@ -54,7 +54,7 @@ public class A_Star_Algorithm : MonoBehaviour
     }
 
 
-    private List<Vector2Int> FindPath(Vector2Int start, Vector2Int goal)
+    public List<Vector2Int> FindPath(Vector2Int start, Vector2Int goal)
     {
         List<Node> openList = new List<Node>();
         List<Vector2Int> visited = new List<Vector2Int>();

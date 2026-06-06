@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
@@ -9,6 +10,10 @@ public class RL_Algorithm : Agent
 {
     private PlayerController player;
     private HashSet<Vector2Int> visitedCells = new HashSet<Vector2Int>();
+    private A_Star_Algorithm temp; //last minute adjustment dont flame plz
+
+    public float decisionDelay = 0.5f;//last minute adjustment dont flame plz
+    private bool waitingForDecision = false;//last minute adjustment dont flame plz
 
     private const int MAZE_SIZE = 9; // For 9x9 maze
     private const float STEP_PENALTY = -0.01f;
@@ -22,12 +27,34 @@ public class RL_Algorithm : Agent
     private void Awake()
     {
         player = GetComponent<PlayerController>();
+        temp = new A_Star_Algorithm();//last minute adjustment, plz dont flame
+        temp.PlayerController = player;
     }
 
     public override void Initialize()
     {
         player = GetComponent<PlayerController>();
     }
+
+    private void Start()//last minute adjustment, plz dont flame
+    {
+        StartCoroutine(DecisionLoop());
+    }
+
+    private IEnumerator DecisionLoop()
+    {
+        while (true)
+        {
+            if (!waitingForDecision)
+            {
+                waitingForDecision = true;
+                RequestDecision();
+            }
+
+            yield return new WaitForSeconds(decisionDelay);
+        }
+    }
+
 
     public override void OnEpisodeBegin()
     {
@@ -98,8 +125,11 @@ public class RL_Algorithm : Agent
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-        if (player.correspondingMazeScript.maze == null)
+        if (player.correspondingMazeScript.maze == null)////last minute adjustment, plz dont flame
+        {
+            waitingForDecision = false;
             return;
+        }
 
         AddReward(STEP_PENALTY);
 
@@ -127,7 +157,15 @@ public class RL_Algorithm : Agent
         }
         else if (action == 4)
         {
+            Vector2Int start = player.currentPos;
+            Vector2Int goal = player.correspondingMazeScript.endCell;
+            int stepCount = temp.FindPath(start, goal).Count;
             validAction = player.instantDoAbility();
+
+            if (validAction && (stepCount >= temp.FindPath(start, goal).Count))
+            {
+                player.correspondingMazeScript.improvedPathCount++;
+            }
         }
 
         
@@ -166,6 +204,8 @@ public class RL_Algorithm : Agent
             episodeSucceeded = true;
             EndEpisode();
         }
+
+        waitingForDecision = false;
     }
 
 
