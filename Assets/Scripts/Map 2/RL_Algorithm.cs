@@ -162,7 +162,7 @@ public class RL_Algorithm : Agent
             int stepCount = temp.FindPath(start, goal).Count;
             validAction = player.instantDoAbility();
 
-            if (validAction && (stepCount >= temp.FindPath(start, goal).Count))
+            if (validAction && (temp.FindPath(start, goal).Count < stepCount))
             {
                 player.correspondingMazeScript.improvedPathCount++;
             }
