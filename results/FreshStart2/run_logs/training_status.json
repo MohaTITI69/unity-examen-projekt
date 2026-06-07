@@ -1,0 +1,65 @@
+{
+    "MazeAgent": {
+        "checkpoints": [
+            {
+                "steps": 48499996,
+                "file_path": "results\\FreshStart2\\MazeAgent\\MazeAgent-48499996.onnx",
+                "reward": 9.660215059977311,
+                "creation_time": 1780828833.4319267,
+                "auxillary_file_paths": [
+                    "results\\FreshStart2\\MazeAgent\\MazeAgent-48499996.pt"
+                ]
+            },
+            {
+                "steps": 48999992,
+                "file_path": "results\\FreshStart2\\MazeAgent\\MazeAgent-48999992.onnx",
+                "reward": 9.553648830285693,
+                "creation_time": 1780829320.2831748,
+                "auxillary_file_paths": [
+                    "results\\FreshStart2\\MazeAgent\\MazeAgent-48999992.pt"
+                ]
+            },
+            {
+                "steps": 49499993,
+                "file_path": "results\\FreshStart2\\MazeAgent\\MazeAgent-49499993.onnx",
+                "reward": 9.523587832511481,
+                "creation_time": 1780829811.2213411,
+                "auxillary_file_paths": [
+                    "results\\FreshStart2\\MazeAgent\\MazeAgent-49499993.pt"
+                ]
+            },
+            {
+                "steps": 49999977,
+                "file_path": "results\\FreshStart2\\MazeAgent\\MazeAgent-49999977.onnx",
+                "reward": 9.911417007446289,
+                "creation_time": 1780830343.5876634,
+                "auxillary_file_paths": [
+                    "results\\FreshStart2\\MazeAgent\\MazeAgent-49999977.pt"
+                ]
+            },
+            {
+                "steps": 50012008,
+                "file_path": "results\\FreshStart2\\MazeAgent\\MazeAgent-50012008.onnx",
+                "reward": 9.674419600167663,
+                "creation_time": 1780830365.2415407,
+                "auxillary_file_paths": [
+                    "results\\FreshStart2\\MazeAgent\\MazeAgent-50012008.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 50012008,
+            "file_path": "results\\FreshStart2\\MazeAgent.onnx",
+            "reward": 9.674419600167663,
+            "creation_time": 1780830365.2415407,
+            "auxillary_file_paths": [
+                "results\\FreshStart2\\MazeAgent\\MazeAgent-50012008.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cpu"
+    }
+}
