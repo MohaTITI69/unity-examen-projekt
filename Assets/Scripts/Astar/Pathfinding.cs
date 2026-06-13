@@ -19,6 +19,10 @@ public class Pathfinding : MonoBehaviour
     private int _totalEpisodesPortalChosen = 0;
     private int _totalUnplannedTeleports   = 0;
 
+    // ── Step-count tracking (for median over 100 episodes) ────────────────────
+    // Stores total steps (cardinal + diagonal + portal jumps) per episode.
+    private List<int> _episodeStepCounts = new List<int>();
+
     void Awake()
     {
         grid          = FindFirstObjectByType<AstarGrid>();
@@ -64,11 +68,112 @@ public class Pathfinding : MonoBehaviour
         grid.ResetTileColors();
         lineRenderer.positionCount = 0;
         portalManager.BuildPortalConnections();
+
+        // Diagnostic — remove once portal walkability is confirmed.
+        foreach (var kvp in portalManager.GetPortalConnections())
+            Debug.Log($"[Portal] entry ({kvp.Key.gridX},{kvp.Key.gridY}) walkable={kvp.Key.walkable}  →  exit ({kvp.Value.gridX},{kvp.Value.gridY}) walkable={kvp.Value.walkable}");
+
         _episode++;
         StartCoroutine(FindBestPath(seeker.position, target.position));
     }
 
-    // ── Tyst A* utan farglaggering, returnerar vag eller null ────────────────
+    // ── Neighbours seen by the portal-aware A* search ────────────────────────
+    // For a portal ENTRY node, return ONLY the exit — no spatial neighbours.
+    // If we returned 8 spatial + exit, A* could route through the entry tile as a
+    // normal waypoint (e.g. [..., (9,3), (10,3), (11,3), ...]). That path has no
+    // non-adjacent step, so MoveSeeker's planned-teleport block never fires, the
+    // unplanned fallback snaps the seeker to the exit, re-plans, gets the same
+    // spatial pass-through again → infinite loop. Returning only the exit forces
+    // A* to either route AROUND the entry or COMMIT to the portal jump, so every
+    // portal hop in the returned path is always a non-adjacent step that the
+    // planned-teleport block in MoveSeeker correctly handles.
+    List<AstarNode> GetNeighboursWithPortals(AstarNode node, Dictionary<AstarNode, AstarNode> portalConnections)
+    {
+        if (portalConnections.TryGetValue(node, out AstarNode exitNode))
+            return new List<AstarNode> { exitNode };
+
+        return grid.GetNeighbours(node);
+    }
+
+    // ── Fully admissible heuristic for portal-aware search ───────────────────
+    // For every node n, the true cost to goal is at most:
+    //   min( GetDistance(n, goal),
+    //        min over all portals: GetDistance(n, entry) + GetDistance(exit, goal) )
+    // The old version only corrected the heuristic AT the entry node itself.
+    // Nodes on the approach path to an entry still had h = GetDistance(n, goal),
+    // which overestimates when the portal shortcut is cheaper — causing A* to
+    // deprioritise the portal route and potentially return a suboptimal direct path.
+    // Iterating all portals is O(P) per node; with a small fixed portal count this
+    // is negligible.
+    int GetHeuristic(AstarNode node, AstarNode targetNode, Dictionary<AstarNode, AstarNode> portalConnections)
+    {
+        int h = GetDistance(node, targetNode);
+        foreach (var kvp in portalConnections)
+        {
+            int viaPortal = GetDistance(node, kvp.Key) + GetDistance(kvp.Value, targetNode);
+            if (viaPortal < h) h = viaPortal;
+        }
+        return h;
+    }
+
+    // ── Unified portal-aware A* — ONE call finds the globally optimal path ───
+    // Portal edges (entry → exit) cost 0; all other edges use standard octile cost.
+    // Because the search graph includes portal edges, chained portals are handled
+    // naturally: A* simply keeps expanding through them if that minimises total cost.
+    List<AstarNode> PortalAwareStar(AstarNode startNode, AstarNode targetNode,
+                                     Dictionary<AstarNode, AstarNode> portalConnections)
+    {
+        if (startNode == targetNode) return new List<AstarNode> { startNode };
+
+        grid.ResetNodes();
+
+        Heap<AstarNode>    openSet   = new Heap<AstarNode>(grid.MaxSize);
+        HashSet<AstarNode> closedSet = new HashSet<AstarNode>();
+
+        startNode.gCost = 0;
+        startNode.hCost = GetHeuristic(startNode, targetNode, portalConnections);
+        openSet.Add(startNode);
+
+        while (openSet.Count > 0)
+        {
+            AstarNode current = openSet.RemoveFirst();
+            closedSet.Add(current);
+
+            if (current == targetNode)
+                return RetraceNodes(startNode, targetNode);
+
+            // Look up once per expanded node to avoid repeated dict lookups in the inner loop.
+            portalConnections.TryGetValue(current, out AstarNode portalExitFromCurrent);
+
+            foreach (AstarNode neighbour in GetNeighboursWithPortals(current, portalConnections))
+            {
+                // Portal exits are teleport destinations, not traversed tiles — skip the
+                // walkability check for them so an unwalkably-placed exit doesn't silently
+                // block the portal edge. Spatial neighbours still require walkable=true.
+                bool isPortalExit = portalExitFromCurrent != null && portalExitFromCurrent == neighbour;
+                if ((!neighbour.walkable && !isPortalExit) || closedSet.Contains(neighbour)) continue;
+
+                // Portal edge costs 0; all spatial edges use octile distance.
+                int edgeCost = (portalExitFromCurrent != null && portalExitFromCurrent == neighbour)
+                    ? 0
+                    : GetDistance(current, neighbour);
+
+                int newCost = current.gCost + edgeCost;
+                if (!openSet.Contains(neighbour) || newCost < neighbour.gCost)
+                {
+                    neighbour.gCost  = newCost;
+                    neighbour.hCost  = GetHeuristic(neighbour, targetNode, portalConnections);
+                    neighbour.parent = current;
+
+                    if (!openSet.Contains(neighbour)) openSet.Add(neighbour);
+                    else                               openSet.UpdateItem(neighbour);
+                }
+            }
+        }
+        return null;
+    }
+
+    // ── Plain A* with no portal knowledge — used only to compute directCost for stats ──
     List<AstarNode> SilentAstar(AstarNode startNode, AstarNode targetNode)
     {
         if (startNode == targetNode) return new List<AstarNode> { startNode };
@@ -123,86 +228,85 @@ public class Pathfinding : MonoBehaviour
         return path;
     }
 
-    // ── Beräkna bästa väg från en given position ─────────────────────────────
-    // Returnerar (bestPath, bestCost, usedPortal, usedPortalIdx, directPath, bestPortalPath)
+    // ── Scan a path for the first non-adjacent step (= portal jump) and return its index ──
+    // Returns -1 if the path contains no portal hops.
+    int DetectPortalIndex(List<AstarNode> path, Dictionary<AstarNode, int> portalIndices)
+    {
+        for (int i = 0; i < path.Count - 1; i++)
+        {
+            int dx = Mathf.Abs(path[i].gridX - path[i + 1].gridX);
+            int dy = Mathf.Abs(path[i].gridY - path[i + 1].gridY);
+            if (dx > 1 || dy > 1)
+            {
+                if (portalIndices.TryGetValue(path[i], out int idx))
+                    return idx;
+            }
+        }
+        return -1;
+    }
+
+    // ── Single unified search (2 A* calls total vs. old 1 + 2·P) ────────────
+    // Call 1 — PortalAwareStar: finds the globally optimal path (including portal hops).
+    // Call 2 — SilentAstar: portal-unaware direct path, used only for thesis stats.
+    //
+    // bestPortalCost equals bestCost when the portal route wins; it is int.MaxValue
+    // when the direct route wins (the cost of a losing portal alternative is not
+    // computed in this design — document as a known stat limitation).
     (List<AstarNode> bestPath, int bestCost, bool usedPortal, int usedPortalIdx,
-     List<AstarNode> directPath, List<AstarNode> bestPortalPath, int directCost, int bestPortalCost, int bestPortalIndex)
+     List<AstarNode> directPath, int directCost, int bestPortalCost)
     ComputeBestPath(Vector3 fromPos, Vector3 toPos)
     {
-        AstarNode startNode  = grid.NodeFromWorldPoint(fromPos);
-        AstarNode targetNode = grid.NodeFromWorldPoint(toPos);
-
         var portalConnections = portalManager.GetPortalConnections();
         var portalIndices     = portalManager.GetPortalIndices();
 
-        List<AstarNode> directPath    = SilentAstar(startNode, targetNode);
-        int             directCost    = directPath != null ? directPath[directPath.Count - 1].gCost : int.MaxValue;
-        List<AstarNode> bestPath      = directPath;
-        int             bestCost      = directCost;
-        int             bestPortalCost  = int.MaxValue;
-        int             bestPortalIndex = -1;
-        List<AstarNode> bestPortalPath  = null;
-        bool            usedPortal    = false;
-        int             usedPortalIdx = -1;
+        AstarNode startNode  = grid.NodeFromWorldPoint(fromPos);
+        AstarNode targetNode = grid.NodeFromWorldPoint(toPos);
 
-        foreach (var kvp in portalIndices)
-        {
-            AstarNode entryNode = kvp.Key;
-            AstarNode exitNode  = portalConnections[entryNode];
-            int       pIndex    = kvp.Value;
+        // Primary search — gCost on returned nodes is valid until SilentAstar resets them.
+        List<AstarNode> bestPath = PortalAwareStar(startNode, targetNode, portalConnections);
+        int             bestCost = bestPath != null ? bestPath[bestPath.Count - 1].gCost : int.MaxValue;
 
-            List<AstarNode> pathToEntry = SilentAstar(startNode, entryNode);
-            if (pathToEntry == null) continue;
-            int costToEntry = pathToEntry[pathToEntry.Count - 1].gCost;
+        // Stats search — resets all node costs, so bestCost must be captured above first.
+        List<AstarNode> directPath = SilentAstar(startNode, targetNode);
+        int             directCost = directPath != null ? directPath[directPath.Count - 1].gCost : int.MaxValue;
 
-            List<AstarNode> pathFromExit = SilentAstar(exitNode, targetNode);
-            if (pathFromExit == null) continue;
-            int costFromExit = pathFromExit[pathFromExit.Count - 1].gCost;
+        int  usedPortalIdx  = DetectPortalIndex(bestPath ?? new List<AstarNode>(), portalIndices);
+        bool usedPortal     = usedPortalIdx >= 0;
+        int  bestPortalCost = usedPortal ? bestCost : int.MaxValue;
 
-            int totalCost = costToEntry + costFromExit;
-
-            if (totalCost < bestPortalCost)
-            {
-                bestPortalCost  = totalCost;
-                bestPortalIndex = pIndex;
-                List<AstarNode> combined = new List<AstarNode>(pathToEntry);
-                combined.AddRange(pathFromExit);
-                bestPortalPath = combined;
-            }
-
-            if (totalCost < bestCost)
-            {
-                bestCost      = totalCost;
-                usedPortal    = true;
-                usedPortalIdx = pIndex;
-                bestPath      = bestPortalPath;
-            }
-        }
-
-        return (bestPath, bestCost, usedPortal, usedPortalIdx, directPath, bestPortalPath, directCost, bestPortalCost, bestPortalIndex);
+        return (bestPath, bestCost, usedPortal, usedPortalIdx, directPath, directCost, bestPortalCost);
     }
 
     // ── Huvudsökning ─────────────────────────────────────────────────────────
     IEnumerator FindBestPath(Vector3 startPos, Vector3 targetPos)
     {
         var (bestPath, bestCost, usedPortal, usedPortalIdx,
-             directPath, bestPortalPath, directCost, bestPortalCost, bestPortalIndex)
+             directPath, directCost, bestPortalCost)
             = ComputeBestPath(startPos, targetPos);
 
-        List<AstarNode> altPath = usedPortal ? directPath : bestPortalPath;
+        // When portal route wins, show direct as the alternative (brown tiles).
+        // When direct route wins, no portal path was computed separately, so no alt overlay.
+        List<AstarNode> altPath = usedPortal ? directPath : null;
 
         bool portalOpportunity = bestPortalCost < directCost;
         if (portalOpportunity) _totalEpisodesWithPortal++;
         if (usedPortal)        _totalEpisodesPortalChosen++;
 
+        // Count steps in the chosen path and store for median.
+        var (cardinalSteps, diagonalSteps, portalSteps) =
+            bestPath != null ? CountPathSteps(bestPath) : (0, 0, 0);
+        int totalSteps = cardinalSteps + diagonalSteps + portalSteps;
+        _episodeStepCounts.Add(totalSteps);
+
         string chosenRoute = usedPortal ? $"PORTAL (index {usedPortalIdx})" : "DIREKT";
 
         Debug.Log($"[A* Episode {_episode}] " +
                   $"direktKostnad={directCost}  " +
-                  $"bästaPortalKostnad={(bestPortalIndex >= 0 ? bestPortalCost + $" (portal {bestPortalIndex})" : "N/A")}  " +
+                  $"bästaPortalKostnad={(usedPortal ? bestPortalCost + $" (portal {usedPortalIdx})" : "N/A")}  " +
                   $"portalSnabbare={portalOpportunity}  " +
                   $"valdVäg={chosenRoute}  " +
-                  $"valdKostnad={bestCost}");
+                  $"valdKostnad={bestCost}  " +
+                  $"steg={totalSteps} (raka={cardinalSteps} diag={diagonalSteps} portal={portalSteps})");
 
         if (_episode % 10 == 0)
         {
@@ -217,6 +321,22 @@ public class Pathfinding : MonoBehaviour
             Debug.Log($"║  Episodes med portalmöjlighet:    {_totalEpisodesWithPortal,-22}║");
             Debug.Log($"║  Portal vald (av möjligheter):    {portalRate:F1}%{"",-18}║");
             Debug.Log($"║  Totalt oplanerade teleporter:    {_totalUnplannedTeleports,-22}║");
+            Debug.Log("╚══════════════════════════════════════════════════════╝");
+        }
+
+        if (_episode % 100 == 0)
+        {
+            // Take only the most recent 100 episodes for the median window.
+            int windowStart = _episodeStepCounts.Count - 100;
+            List<int> window = _episodeStepCounts.GetRange(windowStart, 100);
+            float median = ComputeMedian(window);
+
+            Debug.Log("╔══════════════════════════════════════════════════════╗");
+            Debug.Log("║           STEGSTATISTIK (senaste 100 episodes)       ║");
+            Debug.Log("╠══════════════════════════════════════════════════════╣");
+            Debug.Log($"║  Episodes i fönster:              {100,-22}║");
+            Debug.Log($"║  Median antal steg:               {median,-22:F1}║");
+            Debug.Log($"║  (raka + diagonala + portalhop)                     ║");
             Debug.Log("╚══════════════════════════════════════════════════════╝");
         }
 
@@ -259,6 +379,9 @@ public class Pathfinding : MonoBehaviour
             AstarNode node = path[i];
             if (node == startNode || node == targetNode) continue;
 
+            // Portal-entry tile: the next step is non-adjacent (grid jump), colour it purple.
+            // This check works unchanged because PortalAwareStar still produces entry→exit
+            // as consecutive non-adjacent nodes in the path, just like the old design.
             bool isPortalEntry = i < path.Count - 1 &&
                                  (Mathf.Abs(path[i].gridX - path[i + 1].gridX) > 1 ||
                                   Mathf.Abs(path[i].gridY - path[i + 1].gridY) > 1);
@@ -271,7 +394,7 @@ public class Pathfinding : MonoBehaviour
             lineRenderer.SetPosition(i, new Vector3(path[i].worldPosition.x, 0.5f, path[i].worldPosition.z));
     }
 
-    // ── MoveSeeker med automatisk teleportering och omplanering ──────────────
+    // ── MoveSeeker med automatisk teleportering ───────────────────────────────
     IEnumerator MoveSeeker(List<AstarNode> path, Vector3 targetPos)
     {
         var portalConnections = portalManager.GetPortalConnections();
@@ -282,7 +405,9 @@ public class Pathfinding : MonoBehaviour
         {
             AstarNode currentNode = path[i];
 
-            // ── Planerad teleportering (hopp i vägen) ──────────────────────
+            // ── Planned portal jump (non-adjacent step in path) ────────────────
+            // PortalAwareStar always places entry and exit as consecutive nodes,
+            // so this block handles every intentional portal hop.
             if (i < path.Count - 1)
             {
                 int dx = Mathf.Abs(path[i].gridX - path[i + 1].gridX);
@@ -301,7 +426,7 @@ public class Pathfinding : MonoBehaviour
                 }
             }
 
-            // ── Rörelse mot nästa nod ──────────────────────────────────────
+            // ── Rörelse mot nästa nod ──────────────────────────────────────────
             Vector3 nodePos = new Vector3(currentNode.worldPosition.x, seeker.position.y, currentNode.worldPosition.z);
             while (Vector3.Distance(seeker.position, nodePos) > 0.05f)
             {
@@ -310,17 +435,18 @@ public class Pathfinding : MonoBehaviour
             }
             seeker.position = nodePos;
 
-            // ── Kolla om vi råkat stå på en portalingång (oplanerat) ────────
-            // Oplanerat = noden är en portalingång men nästa nod i vägen är INTE exitnoden
+            // ── Unplanned-teleport safety fallback ────────────────────────────
+            // With portal-aware A*, every portal hop is a planned jump handled above,
+            // so this block is DEAD CODE in normal operation. It is kept as a safety
+            // net for edge cases (e.g. floating-point snap placing the seeker on a
+            // portal tile outside of a planned hop). Remove only after extended testing.
             if (portalConnections.ContainsKey(currentNode))
             {
                 AstarNode exitNode = portalConnections[currentNode];
-                bool plannedTeleport = i < path.Count - 1 &&
-                                       path[i + 1] == exitNode;
+                bool plannedTeleport = i < path.Count - 1 && path[i + 1] == exitNode;
 
                 if (!plannedTeleport)
                 {
-                    // Oplanerad teleportering!
                     unplannedThisEpisode++;
                     _totalUnplannedTeleports++;
                     Vector3 exitPos = new Vector3(exitNode.worldPosition.x, seeker.position.y, exitNode.worldPosition.z);
@@ -330,26 +456,23 @@ public class Pathfinding : MonoBehaviour
                               $"från ({currentNode.gridX},{currentNode.gridY}) " +
                               $"till ({exitNode.gridX},{exitNode.gridY}) — räknar om väg");
 
-                    // Räkna om bästa väg från ny position
                     var (newPath, newCost, newUsedPortal, newUsedPortalIdx,
-                         newDirectPath, newBestPortalPath, newDirectCost, newBestPortalCost, newBestPortalIndex)
+                         newDirectPath, newDirectCost, newBestPortalCost)
                         = ComputeBestPath(seeker.position, targetPos);
 
                     if (newPath != null)
                     {
-                        // Uppdatera visualisering
                         grid.ResetTileColors();
-                        List<AstarNode> newAlt = newUsedPortal ? newDirectPath : newBestPortalPath;
-                        AstarNode newStartNode = grid.NodeFromWorldPoint(seeker.position);
-                        AstarNode newTargetNode = grid.NodeFromWorldPoint(targetPos);
+                        List<AstarNode> newAlt      = newUsedPortal ? newDirectPath : null;
+                        AstarNode       newStartNode = grid.NodeFromWorldPoint(seeker.position);
+                        AstarNode       newTargetNode = grid.NodeFromWorldPoint(targetPos);
 
                         if (newAlt != null)
                             VisualizeAltPath(newAlt, newStartNode, newTargetNode);
                         VisualizePath(newPath, newStartNode, newTargetNode);
 
-                        // Fortsätt med den nya vägen
                         path = newPath;
-                        i = -1; // reset loop, börjar om från index 0
+                        i = -1;
                     }
                     continue;
                 }
@@ -358,6 +481,31 @@ public class Pathfinding : MonoBehaviour
 
         if (unplannedThisEpisode > 0)
             Debug.Log($"[A* Episode {_episode}] Episoden avslutad med {unplannedThisEpisode} oplanerade teleporter");
+    }
+
+    // ── Count cardinal, diagonal, and portal steps in a path ─────────────────
+    (int cardinal, int diagonal, int portalJumps) CountPathSteps(List<AstarNode> path)
+    {
+        int cardinal = 0, diagonal = 0, portals = 0;
+        for (int i = 0; i < path.Count - 1; i++)
+        {
+            int dx = Mathf.Abs(path[i].gridX - path[i + 1].gridX);
+            int dy = Mathf.Abs(path[i].gridY - path[i + 1].gridY);
+            if      (dx > 1 || dy > 1)  portals++;
+            else if (dx + dy == 1)       cardinal++;
+            else                          diagonal++;
+        }
+        return (cardinal, diagonal, portals);
+    }
+
+    // ── Median of a list of ints ──────────────────────────────────────────────
+    float ComputeMedian(List<int> values)
+    {
+        List<int> sorted = new List<int>(values);
+        sorted.Sort();
+        int n = sorted.Count;
+        if (n % 2 == 1) return sorted[n / 2];
+        return (sorted[n / 2 - 1] + sorted[n / 2]) / 2f;
     }
 
     int GetDistance(AstarNode nodeA, AstarNode nodeB)

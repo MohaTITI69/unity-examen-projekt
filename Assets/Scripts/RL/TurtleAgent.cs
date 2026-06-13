@@ -13,6 +13,7 @@ public class TurtleAgent : Agent
     [SerializeField] private float _rotationSpeed = 180f;
     [SerializeField] private PortalPair[] _portalPairs;
     [SerializeField] private GoalSpawner _goalSpawner;
+    [SerializeField] private MyGrid _grid;
  
     private Vector3 _originalTurtlePosition;
     private Quaternion _originalTurtleRotation;
@@ -37,6 +38,12 @@ public class TurtleAgent : Agent
     private float _directDistAtStart;
     private float _optimalPortalCostAtStart;
     private int _stepCount = 0;
+
+    // ── Tile-step counter (same scale as A* for thesis comparison) ────────────
+    // Increments once per grid-tile transition, matching A*'s definition of a step.
+    // Portal teleport counts as 1 tile step. No retraining needed — log only.
+    private int _tileStepCount = 0;
+    private Node _previousNode;
  
     // ── Shaping: track distance to optimal portal entry ───────
     private float _previousDistToOptimalTarget;
@@ -49,6 +56,9 @@ public class TurtleAgent : Agent
     private int _totalEpisodesPortalUsed = 0;
     private int _totalEpisodesGoalReached = 0;
     private int _totalEpisodesGoalReachedViaPortal = 0;
+
+    // Step-count history for median (mirrors A*'s _episodeStepCounts)
+    private List<int> _episodeTileStepCounts = new List<int>();
     // ────────────────────────────────────────────────────────────────
  
     public override void Initialize()
@@ -70,6 +80,8 @@ public class TurtleAgent : Agent
         _usedOptimalPortal = false;
         _passedThroughOptimalPortal = false;
         _stepCount = 0;
+        _tileStepCount = 0;
+        _previousNode = _grid != null ? _grid.NodeFromWorldPoint(transform.position) : null;
  
         if (_groundRenderer != null)
         {
@@ -185,6 +197,8 @@ public class TurtleAgent : Agent
                   $"stepsSoFar={_stepCount}");
         _totalEpisodesPortalUsed++;
  
+        _tileStepCount++; // portal jump counts as one tile step, same as A*
+
         if (portalIndex == _optimalPortalIndex)
         {
             _usedOptimalPortal = true;
@@ -263,9 +277,20 @@ public class TurtleAgent : Agent
     {
         _canDetectGoal = true;
         _stepCount++;
- 
+
         MoveAgent(actions.DiscreteActions);
- 
+
+        // ── Count tile transitions (A*-comparable step metric) ────────
+        if (_grid != null)
+        {
+            Node currentNode = _grid.NodeFromWorldPoint(transform.position);
+            if (currentNode != _previousNode)
+            {
+                _tileStepCount++;
+                _previousNode = currentNode;
+            }
+        }
+
         // ── Reward shaping: progress toward optimal target ────────────
         // When portal is optimal: reward getting closer to portal entry
         // After portal used (or no portal): reward getting closer to goal
@@ -319,6 +344,7 @@ public class TurtleAgent : Agent
  
         _totalEpisodesGoalReached++;
         if (_usedOptimalPortal) _totalEpisodesGoalReachedViaPortal++;
+        _episodeTileStepCounts.Add(_tileStepCount);
  
         float portalUsageRate = _totalEpisodesWithPortalOpportunity > 0
             ? (float)_totalEpisodesPortalUsed / _totalEpisodesWithPortalOpportunity * 100f
@@ -328,7 +354,8 @@ public class TurtleAgent : Agent
             : 0f;
  
         Debug.Log($"[RL Episode {CurrentEpisode}] GOAL REACHED — " +
-                  $"steps={_stepCount}  " +
+                  $"tileSteg={_tileStepCount}  " +
+                  $"beslutssteg={_stepCount}  " +
                   $"totalReward={CumulativeReward:F2}  " +
                   $"portalUsed={_usedPortalThisEpisode}  " +
                   $"portalWasOptimal={(_optimalPortalIndex >= 0 ? "YES" : "NO")}  " +
@@ -349,6 +376,22 @@ public class TurtleAgent : Agent
             Debug.Log("║  is learning to exploit the shortcut                 ║");
             Debug.Log("╚══════════════════════════════════════════════════════╝");
         }
+
+        if (_episodeTileStepCounts.Count > 0 && _episodeTileStepCounts.Count % 100 == 0)
+        {
+            int start = _episodeTileStepCounts.Count - 100;
+            List<int> last100 = _episodeTileStepCounts.GetRange(start, 100);
+            float median = ComputeMedian(last100);
+            Debug.Log("╔══════════════════════════════════════════════════════╗");
+            Debug.Log("║         RL STEG-STATISTIK  (senaste 100 mål)         ║");
+            Debug.Log("╠══════════════════════════════════════════════════════╣");
+            Debug.Log($"║  Avslutade mål:   {_episodeTileStepCounts.Count,-35}║");
+            Debug.Log($"║  Median tile-steg (per avslutad episod): {median,-13:F1}║");
+            Debug.Log("╠══════════════════════════════════════════════════════╣");
+            Debug.Log("║  Tile-steg = rutor passerade + 1 per portalhop       ║");
+            Debug.Log("║  Samma skala som A* för direkt jämförelse            ║");
+            Debug.Log("╚══════════════════════════════════════════════════════╝");
+        }
  
         EndEpisode();
     }
@@ -366,5 +409,15 @@ public class TurtleAgent : Agent
     {
         if (collision.gameObject.CompareTag("Wall"))
             _renderer.material.color = Color.blue;
+    }
+
+    private float ComputeMedian(List<int> values)
+    {
+        List<int> sorted = new List<int>(values);
+        sorted.Sort();
+        int mid = sorted.Count / 2;
+        return sorted.Count % 2 == 0
+            ? (sorted[mid - 1] + sorted[mid]) / 2f
+            : sorted[mid];
     }
 }
